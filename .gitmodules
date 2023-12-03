@@ -1,0 +1,3 @@
+[submodule "lib/Simple_tree"]
+	path = lib/Simple_tree
+	url = https://github.com/dmitry131131/Simple_tree.git
