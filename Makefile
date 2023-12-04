@@ -15,7 +15,7 @@ TARGET = diff
 SourcePrefix = src/
 BuildPrefix = build/
 BuildFolder = build
-Include = -Iinclude -Ilib/Simple_tree/include -Ilib/Color_console_output/include
+Include = -Iinclude -Ilib/Simple_tree/include -Ilib/Color_console_output/include -Ilib/Data_buffer/include
 
 Sources = Diff.cpp DiffErrors.cpp
 Main = main.cpp

@@ -6,7 +6,11 @@
 #define DIFF_ERRORS_H
 
 enum diffErrorCode {
-    NO_DIFF_ERRORS
+    NO_DIFF_ERRORS,
+    DIFF_FILE_OPEN_ERROR,
+    READ_FROM_FILE_ERROR,
+    WRONG_DIFF_SYNTAX
+    
 };
 
 void print_diff_error(diffErrorCode error);
