@@ -9,7 +9,8 @@ enum diffErrorCode {
     NO_DIFF_ERRORS,
     DIFF_FILE_OPEN_ERROR,
     READ_FROM_FILE_ERROR,
-    WRONG_DIFF_SYNTAX
+    WRONG_DIFF_SYNTAX,
+    DTOR_BUFFER_ERROR
     
 };
 

@@ -5,13 +5,14 @@
 #ifndef DIFF_H
 #define DIFF_H
 
+#include "DataBuffer.h"
 #include "DiffErrors.h"
 #include "Tree.h"
 
-const size_t MAX_TEXT_LEN;
+const size_t MAX_TEXT_LEN = 250;
 
 enum TokenType {
-    NONE,
+    NO_TYPE,
     NUM,
     VAR,
     OP

@@ -4,8 +4,6 @@
 #include <string.h>
 #include <assert.h>
 
-#include "Tree.h"
-#include "DataBuffer.h"
 #include "Diff.h"
 
 diffErrorCode read_diff_from_file(const char* filename, TreeData* tree)
@@ -25,10 +23,19 @@ diffErrorCode read_diff_from_file(const char* filename, TreeData* tree)
     {
         return READ_FROM_FILE_ERROR;
     }
+    fclose(file);
 
     DiffToken* token_array = (DiffToken*) calloc(buffer.customSize, sizeof(DiffToken));
+    diff_tokenizer(&token_array, &buffer);
 
-    fclose(file);
+    if (buffer_dtor(&buffer))
+    {
+        return DTOR_BUFFER_ERROR;
+    }
+
+    printf("%lf\n", token_array[0].data.num);
+
+    free(token_array);
 
     return NO_DIFF_ERRORS;
 }
@@ -48,7 +55,7 @@ diffErrorCode diff_tokenizer(DiffToken** token_array, outputBuffer* buffer)
             (token_array[count])->position = buffer->bufferPointer;
 
             int digit_len = 0;
-            sscanf(buffer->customBuffer +buffer->bufferPointer, "%lf%n", (token_array[count])->data.num, &digit_len);
+            sscanf(buffer->customBuffer +buffer->bufferPointer, "%lf%n", &((token_array[count])->data.num), &digit_len);
             buffer->bufferPointer += (size_t) digit_len;
                 
             count++;
