@@ -48,7 +48,11 @@ diffErrorCode read_diff_from_file(const char* filename, TreeData* tree)
         RETURN(error);
     }
 
-    printf("%d\n", token_array.Array[2].data.op);
+    if ((error = getG(tree, &token_array)))
+    {
+        printf("In position: %lu\n", token_array.Array[token_array.Pointer].position);
+        RETURN(error);
+    }
     
     RETURN(NO_DIFF_ERRORS);
 
@@ -119,6 +123,22 @@ diffErrorCode read_punct_command(outputBuffer* buffer, DiffToken* token)
         token->type = OP;
         token->data.op = CBR;
         break;
+    case '+':
+        token->type = OP;
+        token->data.op = PLUS;
+        break;
+    case '-':
+        token->type = OP;
+        token->data.op = MINUS;
+        break;
+    case '*':
+        token->type = OP;
+        token->data.op = MUL;
+        break;
+    case '/':
+        token->type = OP;
+        token->data.op = DIV;
+        break;
     
     default:
         return WRONG_DIFF_SYNTAX;
@@ -174,35 +194,53 @@ diffErrorCode read_text_command(outputBuffer* buffer, DiffToken* token)
 
     return NO_DIFF_ERRORS;
 }
-/*
-diffErrorCode getG(TreeData* tree, DiffToken** token_array)
+
+TreeSegment* CreateNode(SegmemtType type, SegmentData data, TreeSegment* left, TreeSegment* right)
+{
+    TreeSegment* seg = new_segment(type, sizeof(int));
+
+    seg->data  = data;
+    seg->left  = left;
+    seg->right = right;
+
+    return seg;
+}
+
+diffErrorCode getG(TreeData* tree, tokenArray* token_array)
 {
     assert(tree);
     assert(token_array);
 
     diffErrorCode error = NO_DIFF_ERRORS;
 
-    TreeSegment* val = getE(token_array);
-
+    tree->root = getE(token_array, &error);
 
     return error;
 }
 
-TreeSegment* getE(DiffToken** token_array)
+TreeSegment* getE(tokenArray* token_array, diffErrorCode* error)
 {
-    int val = getT(data);
-    while ((data->s)[data->p] == '+' || (data->s)[data->p] == '-')
+    assert(token_array);
+    assert(error);
+
+    TreeSegment* val = getT(token_array, error);
+    while ((token_array->Array)[token_array->Pointer].type == OP && 
+    ((token_array->Array)[token_array->Pointer].data.op == PLUS || (token_array->Array)[token_array->Pointer].data.op == MINUS))
     {
-        int op = (data->s)[data->p];
-        (data->p)++;
-        int val2 = getT(data);
-        switch (op)
+        OpCodes op = (token_array->Array)[token_array->Pointer].data.op;
+        (token_array->Pointer)++;
+
+        TreeSegment* val2 = getT(token_array, error);
+        SegmentData data = {};
+        switch ((int) op)
         {
-        case '+':
-            val += val2;
+        case PLUS:
+            data.Op_code = PLUS;
+            val = CreateNode(OP_CODE_SEGMENT_DATA, data, val, val2);
             break;
-        case '-':
-            val -= val2;
+        case MINUS:
+            data.Op_code = MINUS;
+            val = CreateNode(OP_CODE_SEGMENT_DATA, data, val, val2);
             break;
         
         default:
@@ -214,4 +252,106 @@ TreeSegment* getE(DiffToken** token_array)
 
     return val;
 }
-*/
+
+TreeSegment* getT(tokenArray* token_array, diffErrorCode* error)
+{
+    TreeSegment* val = getP(token_array, error);
+    
+    while ((token_array->Array)[token_array->Pointer].type == OP && 
+    ((token_array->Array)[token_array->Pointer].data.op == MUL || (token_array->Array)[token_array->Pointer].data.op == DIV))
+    {
+        OpCodes op = (token_array->Array)[token_array->Pointer].data.op;
+        (token_array->Pointer)++;
+
+        TreeSegment* val2 = getP(token_array, error);
+        SegmentData data = {};
+        switch ((int) op)
+        {
+        case MUL:
+            data.Op_code = MUL;
+            val = CreateNode(OP_CODE_SEGMENT_DATA, data, val, val2);
+            break;
+        case DIV:
+            data.Op_code = DIV;
+            val = CreateNode(OP_CODE_SEGMENT_DATA, data, val, val2);
+            break;
+        
+        default:
+            printf("getT error!");
+            assert(0);
+            break;
+        }
+    }
+
+    return val;
+}
+
+TreeSegment* getP(tokenArray* token_array, diffErrorCode* error)
+{
+    TreeSegment* val = NULL;
+    if ((token_array->Array)[token_array->Pointer].type == OP && (token_array->Array)[token_array->Pointer].data.op == OBR)
+    {
+        (token_array->Pointer)++;
+        val = getE(token_array, error);
+        if ((token_array->Array)[token_array->Pointer].data.op != CBR)
+        {
+            printf("getP error!\n");
+            assert(0);
+        }
+        (token_array->Pointer)++;
+        return val;
+    }
+    else if ((token_array->Array)[token_array->Pointer].type == NUM)
+    {
+        return getN(token_array, error);
+    }
+    else
+    {
+        return getId(token_array, error);
+    }
+}
+
+TreeSegment* getN(tokenArray* token_array, diffErrorCode* error)
+{
+    TreeSegment* val = NULL;
+
+    if ((token_array->Array)[token_array->Pointer].type == NUM)
+    {
+        SegmentData data;
+        data.D_number = (token_array->Array)[token_array->Pointer].data.num;
+        val = CreateNode(DOUBLE_SEGMENT_DATA, data, nullptr, nullptr);
+        (token_array->Pointer)++;
+    }
+    else
+    {
+        if (error) *error = WRONG_DIFF_SYNTAX;
+    }
+
+    return val;
+}
+
+TreeSegment* getId(tokenArray* token_array, diffErrorCode* error)
+{
+    TreeSegment* val = NULL;
+
+    if ((token_array->Array)[token_array->Pointer].type == VAR)
+    {
+        SegmentData data;
+        data.Var = 1;
+        val = CreateNode(VAR_SEGMENT_DATA, data, nullptr, nullptr);
+    }
+    else if ((token_array->Array)[token_array->Pointer].type == OP && (token_array->Array)[token_array->Pointer].data.op)
+    {
+        SegmentData data;
+        data.Op_code = (token_array->Array)[token_array->Pointer].data.op;
+        val = CreateNode(OP_CODE_SEGMENT_DATA, data, nullptr, nullptr);
+
+    }
+    else 
+    {
+        if (error) *error = WRONG_DIFF_SYNTAX;
+    }
+    (token_array->Pointer)++;
+
+    return val;
+}

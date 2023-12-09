@@ -5,6 +5,18 @@
         "string": "cpp",
         "string_view": "cpp",
         "span": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "charconv": "cpp",
+        "compare": "cpp",
+        "complex": "cpp",
+        "functional": "cpp",
+        "ratio": "cpp",
+        "tuple": "cpp",
+        "type_traits": "cpp",
+        "utility": "cpp",
+        "variant": "cpp",
+        "__hash_table": "cpp",
+        "__tree": "cpp",
+        "limits": "cpp"
     }
 }

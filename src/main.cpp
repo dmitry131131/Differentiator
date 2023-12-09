@@ -12,5 +12,9 @@ int main()
     {
         print_diff_error(error);
     }
+
+    tree_dump(&tree);
+
+    tree_dtor(&tree);
     return 0;
 }
