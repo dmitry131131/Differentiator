@@ -345,7 +345,20 @@ TreeSegment* getId(tokenArray* token_array, diffErrorCode* error)
         SegmentData data;
         data.Op_code = (token_array->Array)[token_array->Pointer].data.op;
         val = CreateNode(OP_CODE_SEGMENT_DATA, data, nullptr, nullptr);
+        (token_array->Pointer)++;
 
+        if ((token_array->Array)[token_array->Pointer].data.op != OBR)
+        {
+            if (error) *error = WRONG_DIFF_SYNTAX;
+            return val;
+        }
+        (token_array->Pointer)++;
+        val->left = getE(token_array, error);
+        if ((token_array->Array)[token_array->Pointer].data.op != CBR)
+        {
+            if (error) *error = WRONG_DIFF_SYNTAX;
+            return val;
+        }
     }
     else 
     {
