@@ -26,11 +26,17 @@ struct DiffToken {
     size_t position;
 };
 
+struct tokenArray {
+    DiffToken* Array;
+    size_t Pointer;
+    size_t size;
+};
+
 diffErrorCode read_text_command(outputBuffer* buffer, DiffToken* token);
 
 diffErrorCode read_punct_command(outputBuffer* buffer, DiffToken* token);
 
-diffErrorCode diff_tokenizer(DiffToken** token_array, outputBuffer* buffer);
+diffErrorCode diff_tokenizer(tokenArray* token_array, outputBuffer* buffer);
 
 diffErrorCode read_diff_from_file(const char* filename, TreeData* tree);
 

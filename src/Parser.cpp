@@ -9,14 +9,13 @@
 #include "Tree.h"
 #include "Parser.h"
 
-
 diffErrorCode read_diff_from_file(const char* filename, TreeData* tree)
 {
     assert(filename);
     assert(tree);
 
     #define RETURN(code) do{                \
-        free(token_array);                  \
+        free(token_array.Array);            \
         if (buffer_dtor(&buffer))           \
         {                                   \
             return DTOR_BUFFER_ERROR;       \
@@ -40,21 +39,23 @@ diffErrorCode read_diff_from_file(const char* filename, TreeData* tree)
     }
     fclose(file);
 
-    DiffToken* token_array = (DiffToken*) calloc(buffer.customSize, sizeof(DiffToken));
+    tokenArray token_array = {};
+
+    token_array.Array = (DiffToken*) calloc(buffer.customSize, sizeof(DiffToken));
     
     if ((error = diff_tokenizer(&token_array, &buffer)))
     {
         RETURN(error);
     }
 
-    printf("%d\n", token_array[0].data.op);
+    printf("%d\n", token_array.Array[2].data.op);
     
     RETURN(NO_DIFF_ERRORS);
 
     #undef RETURN
 }
 
-diffErrorCode diff_tokenizer(DiffToken** token_array, outputBuffer* buffer)
+diffErrorCode diff_tokenizer(tokenArray* token_array, outputBuffer* buffer)
 {
     assert(token_array);
     assert(buffer);
@@ -65,18 +66,18 @@ diffErrorCode diff_tokenizer(DiffToken** token_array, outputBuffer* buffer)
     {
         if (isdigit(buffer->customBuffer[buffer->bufferPointer]))
         {
-            (token_array[count])->type     = NUM;
-            (token_array[count])->position = buffer->bufferPointer;
+            ((token_array->Array)[count]).type     = NUM;
+            ((token_array->Array)[count]).position = buffer->bufferPointer;
 
             int digit_len = 0;
-            sscanf(buffer->customBuffer +buffer->bufferPointer, "%lf%n", &((token_array[count])->data.num), &digit_len);
+            sscanf(buffer->customBuffer +buffer->bufferPointer, "%lf%n", &(((token_array->Array)[count]).data.num), &digit_len);
             buffer->bufferPointer += (size_t) digit_len;
                 
             count++;
         }
         else if (isalpha(buffer->customBuffer[buffer->bufferPointer]))
         {
-            if ((error = read_text_command(buffer, (*token_array) + count)))
+            if ((error = read_text_command(buffer, &(token_array->Array)[count])))
             {
                 return error;
             }
@@ -85,7 +86,7 @@ diffErrorCode diff_tokenizer(DiffToken** token_array, outputBuffer* buffer)
         }
         else if (ispunct(buffer->customBuffer[buffer->bufferPointer]))
         {
-            if ((error = read_punct_command(buffer, (*token_array) + count)))
+            if ((error = read_punct_command(buffer, &(token_array->Array)[count])))
             {
                 return error;
             }
@@ -173,3 +174,44 @@ diffErrorCode read_text_command(outputBuffer* buffer, DiffToken* token)
 
     return NO_DIFF_ERRORS;
 }
+/*
+diffErrorCode getG(TreeData* tree, DiffToken** token_array)
+{
+    assert(tree);
+    assert(token_array);
+
+    diffErrorCode error = NO_DIFF_ERRORS;
+
+    TreeSegment* val = getE(token_array);
+
+
+    return error;
+}
+
+TreeSegment* getE(DiffToken** token_array)
+{
+    int val = getT(data);
+    while ((data->s)[data->p] == '+' || (data->s)[data->p] == '-')
+    {
+        int op = (data->s)[data->p];
+        (data->p)++;
+        int val2 = getT(data);
+        switch (op)
+        {
+        case '+':
+            val += val2;
+            break;
+        case '-':
+            val -= val2;
+            break;
+        
+        default:
+            printf("getE error!");
+            assert(0);
+            break;
+        }
+    }   
+
+    return val;
+}
+*/
