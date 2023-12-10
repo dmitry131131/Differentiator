@@ -224,6 +224,8 @@ TreeSegment* getE(tokenArray* token_array, diffErrorCode* error)
     assert(error);
 
     TreeSegment* val = getT(token_array, error);
+    if (*error) return val;
+
     while ((token_array->Array)[token_array->Pointer].type == OP && 
     ((token_array->Array)[token_array->Pointer].data.op == PLUS || (token_array->Array)[token_array->Pointer].data.op == MINUS))
     {
@@ -231,6 +233,12 @@ TreeSegment* getE(tokenArray* token_array, diffErrorCode* error)
         (token_array->Pointer)++;
 
         TreeSegment* val2 = getT(token_array, error);
+        if (*error)
+        {
+            del_segment(val);
+            return val2;
+        }
+
         SegmentData data = {};
         switch ((int) op)
         {
@@ -244,8 +252,10 @@ TreeSegment* getE(tokenArray* token_array, diffErrorCode* error)
             break;
         
         default:
-            printf("getE error!");
-            assert(0);
+            *error = WRONG_DIFF_SYNTAX;
+            del_segment(val);
+            del_segment(val2);
+            return NULL;
             break;
         }
     }   
@@ -256,6 +266,7 @@ TreeSegment* getE(tokenArray* token_array, diffErrorCode* error)
 TreeSegment* getT(tokenArray* token_array, diffErrorCode* error)
 {
     TreeSegment* val = getP(token_array, error);
+    if (*error) return val;
     
     while ((token_array->Array)[token_array->Pointer].type == OP && 
     ((token_array->Array)[token_array->Pointer].data.op == MUL || (token_array->Array)[token_array->Pointer].data.op == DIV))
@@ -264,6 +275,12 @@ TreeSegment* getT(tokenArray* token_array, diffErrorCode* error)
         (token_array->Pointer)++;
 
         TreeSegment* val2 = getP(token_array, error);
+        if (*error) 
+        {
+            del_segment(val);
+            return val2;
+        }
+
         SegmentData data = {};
         switch ((int) op)
         {
@@ -277,8 +294,10 @@ TreeSegment* getT(tokenArray* token_array, diffErrorCode* error)
             break;
         
         default:
-            printf("getT error!");
-            assert(0);
+            *error = WRONG_DIFF_SYNTAX;
+            del_segment(val);
+            del_segment(val2);
+            return NULL;
             break;
         }
     }
@@ -293,10 +312,13 @@ TreeSegment* getP(tokenArray* token_array, diffErrorCode* error)
     {
         (token_array->Pointer)++;
         val = getE(token_array, error);
+        if (*error) return val;
+
         if ((token_array->Array)[token_array->Pointer].data.op != CBR)
         {
-            printf("getP error!\n");
-            assert(0);
+            *error = WRONG_DIFF_SYNTAX;
+            del_segment(val);
+            return nullptr;
         }
         (token_array->Pointer)++;
         return val;
@@ -324,7 +346,7 @@ TreeSegment* getN(tokenArray* token_array, diffErrorCode* error)
     }
     else
     {
-        if (error) *error = WRONG_DIFF_SYNTAX;
+        *error = WRONG_DIFF_SYNTAX;
     }
 
     return val;
@@ -350,19 +372,21 @@ TreeSegment* getId(tokenArray* token_array, diffErrorCode* error)
         if ((token_array->Array)[token_array->Pointer].data.op != OBR)
         {
             if (error) *error = WRONG_DIFF_SYNTAX;
-            return val;
+            del_segment(val);
+            return nullptr;
         }
         (token_array->Pointer)++;
         val->left = getE(token_array, error);
         if ((token_array->Array)[token_array->Pointer].data.op != CBR)
         {
             if (error) *error = WRONG_DIFF_SYNTAX;
-            return val;
+            del_segment(val);
+            return nullptr;
         }
     }
     else 
     {
-        if (error) *error = WRONG_DIFF_SYNTAX;
+        *error = WRONG_DIFF_SYNTAX;
     }
     (token_array->Pointer)++;
 
