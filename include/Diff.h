@@ -9,5 +9,6 @@
 #include "DiffErrors.h"
 #include "Tree.h"
 
+double solve_tree(const TreeData* tree, diffErrorCode* error);
 
 #endif

@@ -10,8 +10,9 @@ enum diffErrorCode {
     DIFF_FILE_OPEN_ERROR,
     READ_FROM_FILE_ERROR,
     WRONG_DIFF_SYNTAX,
-    DTOR_BUFFER_ERROR
-    
+    DTOR_BUFFER_ERROR,
+    BAD_TREE_SEGMENT,
+    BAD_TREE_COMPOSITION
 };
 
 void print_diff_error(diffErrorCode error);

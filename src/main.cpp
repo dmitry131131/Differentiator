@@ -15,6 +15,8 @@ int main()
 
     tree_dump(&tree);
 
+    printf("Answer: %lf\n", solve_tree(&tree, &error));
+
     tree_dtor(&tree);
     return 0;
 }
