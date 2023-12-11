@@ -95,6 +95,9 @@ static double solve_op_segment(const TreeSegment* segment, const double left, co
     case TAN:
         return tan(left);
 
+    case POW:
+        return pow(left, right);
+
     case NONE:
     case OBR:
     case CBR:

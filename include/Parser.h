@@ -44,6 +44,8 @@ TreeSegment* CreateNode(SegmemtType type, SegmentData data, TreeSegment* left, T
 
 TreeSegment* getId(tokenArray* token_array, diffErrorCode* error);
 
+TreeSegment* getPow(tokenArray* token_array, diffErrorCode* error);
+
 TreeSegment* getN(tokenArray* token_array, diffErrorCode* error);
 
 TreeSegment* getP(tokenArray* token_array, diffErrorCode* error);

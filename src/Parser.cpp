@@ -41,7 +41,7 @@ diffErrorCode read_diff_from_file(const char* filename, TreeData* tree)
 
     tokenArray token_array = {};
 
-    token_array.Array = (DiffToken*) calloc(buffer.customSize, sizeof(DiffToken));
+    token_array.Array = (DiffToken*) calloc(buffer.customSize + 2, sizeof(DiffToken));
     
     if ((error = diff_tokenizer(&token_array, &buffer)))
     {
@@ -76,7 +76,7 @@ diffErrorCode diff_tokenizer(tokenArray* token_array, outputBuffer* buffer)
             int digit_len = 0;
             sscanf(buffer->customBuffer +buffer->bufferPointer, "%lf%n", &(((token_array->Array)[count]).data.num), &digit_len);
             buffer->bufferPointer += (size_t) digit_len;
-                
+
             count++;
         }
         else if (isalpha(buffer->customBuffer[buffer->bufferPointer]))
@@ -103,6 +103,7 @@ diffErrorCode diff_tokenizer(tokenArray* token_array, outputBuffer* buffer)
         }
     }
 
+    token_array->size = count;
     return NO_DIFF_ERRORS;
 }
 
@@ -138,6 +139,10 @@ diffErrorCode read_punct_command(outputBuffer* buffer, DiffToken* token)
     case '/':
         token->type = OP;
         token->data.op = DIV;
+        break;
+    case '^':
+        token->type = OP;
+        token->data.op = POW;
         break;
     
     default:
@@ -269,7 +274,7 @@ TreeSegment* getE(tokenArray* token_array, diffErrorCode* error)
 
 TreeSegment* getT(tokenArray* token_array, diffErrorCode* error)
 {
-    TreeSegment* val = getP(token_array, error);
+    TreeSegment* val = getPow(token_array, error);
     if (*error) return val;
     
     while ((token_array->Array)[token_array->Pointer].type == OP && 
@@ -278,7 +283,7 @@ TreeSegment* getT(tokenArray* token_array, diffErrorCode* error)
         OpCodes op = (token_array->Array)[token_array->Pointer].data.op;
         (token_array->Pointer)++;
 
-        TreeSegment* val2 = getP(token_array, error);
+        TreeSegment* val2 = getPow(token_array, error);
         if (*error) 
         {
             del_segment(val);
@@ -306,8 +311,34 @@ TreeSegment* getT(tokenArray* token_array, diffErrorCode* error)
             del_segment(val);
             del_segment(val2);
             return NULL;
-            break;
         }
+    }
+
+    return val;
+}
+
+TreeSegment* getPow(tokenArray* token_array, diffErrorCode* error)
+{
+    TreeSegment* val = getP(token_array, error);
+    if (*error) return val;
+
+    if ((token_array->Array)[token_array->Pointer].type == OP && (token_array->Array)[token_array->Pointer].data.op == POW)
+    {
+        (token_array->Pointer)++;
+
+        TreeSegment* val2 = getP(token_array, error);
+        if (*error) 
+        {
+            del_segment(val);
+            return val2;
+        }
+
+        SegmentData data = {};
+
+        data.Op_code = POW;
+        val = CreateNode(OP_CODE_SEGMENT_DATA, data, val, val2);
+        val2->parent      = val;
+        val->left->parent = val;
     }
 
     return val;

@@ -98,6 +98,9 @@ static diffErrorCode print_command_by_opcode(OpCodes code, FILE* stream)
     case TAN:
         fprintf(stream, "tan");
         break;
+    case POW:
+        fprintf(stream, "^");
+        break;
 
     case OBR:
     case CBR:
