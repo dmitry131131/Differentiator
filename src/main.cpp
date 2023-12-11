@@ -1,7 +1,6 @@
 #include <stdio.h>
 
 #include "Diff.h"
-#include "Parser.h"
 
 int main()
 {   
@@ -24,6 +23,8 @@ int main()
     printf("%p\n", tree.root->right->parent);
 
     printf("Answer: %lf\n", solve_tree(&tree, &error));
+
+    print_expression(&tree, stdout);
 
     tree_dtor(&tree);
     return 0;
