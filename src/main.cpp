@@ -21,6 +21,8 @@ int main()
 
     tree_dump(&tree);
 
+    printf("%p\n", tree.root->right->parent);
+
     printf("Answer: %lf\n", solve_tree(&tree, &error));
 
     tree_dtor(&tree);

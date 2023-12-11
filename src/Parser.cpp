@@ -245,10 +245,14 @@ TreeSegment* getE(tokenArray* token_array, diffErrorCode* error)
         case PLUS:
             data.Op_code = PLUS;
             val = CreateNode(OP_CODE_SEGMENT_DATA, data, val, val2);
+            val2->parent      = val;
+            val->left->parent = val;
             break;
         case MINUS:
             data.Op_code = MINUS;
             val = CreateNode(OP_CODE_SEGMENT_DATA, data, val, val2);
+            val2->parent      = val;
+            val->left->parent = val;
             break;
         
         default:
@@ -287,10 +291,14 @@ TreeSegment* getT(tokenArray* token_array, diffErrorCode* error)
         case MUL:
             data.Op_code = MUL;
             val = CreateNode(OP_CODE_SEGMENT_DATA, data, val, val2);
+            val2->parent      = val;
+            val->left->parent = val;
             break;
         case DIV:
             data.Op_code = DIV;
             val = CreateNode(OP_CODE_SEGMENT_DATA, data, val, val2);
+            val2->parent      = val;
+            val->left->parent = val;
             break;
         
         default:
