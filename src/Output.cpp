@@ -7,6 +7,8 @@ static diffErrorCode print_expression_recursive(TreeSegment* segment, FILE* stre
 
 static diffErrorCode print_command_by_opcode(OpCodes code, FILE* stream);
 
+static bool is_single_command(OpCodes code);
+
 diffErrorCode print_expression(TreeData* tree, FILE* stream)
 {
     assert(tree);
@@ -16,6 +18,8 @@ diffErrorCode print_expression(TreeData* tree, FILE* stream)
 
     error = print_expression_recursive(tree->root, stream);
 
+    fprintf(stream, "\n");
+
     return error;
 }
 
@@ -23,14 +27,19 @@ static diffErrorCode print_expression_recursive(TreeSegment* segment, FILE* stre
 {
     assert(segment);
     assert(stream);
+
+    #define BRACKET(brack) do {                             \
+        if (segment->parent)                                \
+        {                                                   \
+            if (segment->parent->weight < segment->weight)  \
+            {                                               \
+                fprintf(stream, brack);                     \
+            }                                               \
+        }                                                   \
+    }while(0)
+
     diffErrorCode error = NO_DIFF_ERRORS;
-    if (segment->left)
-    {
-        if ((error = print_expression_recursive(segment->left, stream)))
-        {
-            return error;
-        }
-    }
+    BRACKET("(");
 
     switch (segment->type)
     {
@@ -38,15 +47,47 @@ static diffErrorCode print_expression_recursive(TreeSegment* segment, FILE* stre
         fprintf(stream, "%.2lf", segment->data.D_number);
         break;
 
-    case OP_CODE_SEGMENT_DATA:
-        if ((error = print_command_by_opcode(segment->data.Op_code, stream)))
-        {
-            return error;
-        }
-        break;
-
     case VAR_SEGMENT_DATA:
         fprintf(stream, "x");
+        break;
+
+    case OP_CODE_SEGMENT_DATA:
+        if (is_single_command(segment->data.Op_code))
+        {
+            if ((error = print_command_by_opcode(segment->data.Op_code, stream)))
+            {
+                return error;
+            }
+            fprintf(stream, "(");
+            if ((error = print_expression_recursive(segment->left, stream)))
+            {
+                return error;
+            }
+            fprintf(stream, ")");
+        }
+        else
+        {
+            if (segment->left)
+            {
+                if ((error = print_expression_recursive(segment->left, stream)))
+                {
+                    return error;
+                }
+            }
+
+            if ((error = print_command_by_opcode(segment->data.Op_code, stream)))
+            {
+                return error;
+            }
+
+            if (segment->right)
+            {
+                if ((error = print_expression_recursive(segment->right, stream)))
+                {
+                    return error;
+                }
+            }
+        }
         break;
 
     case TEXT_SEGMENT_DATA:
@@ -57,17 +98,44 @@ static diffErrorCode print_expression_recursive(TreeSegment* segment, FILE* stre
         break;
     }
 
-    if (segment->right)
-    {
-        if ((error = print_expression_recursive(segment->right, stream)))
-        {
-            return error;
-        }
-    }
+    BRACKET(")");
 
     return error;
+
+    #undef BRACKET
 }
 
+static bool is_single_command(OpCodes code)
+{
+    bool res = false;
+    switch (code)
+    {
+    case PLUS:
+        break;
+    case MINUS:
+        break;
+    case MUL:
+        break;
+    case DIV:
+        break;
+    case POW:
+        break;
+
+    case SIN:
+    case COS:
+    case TAN:
+        res = true;
+        break;
+
+    case OBR:
+    case CBR:
+    case NONE:
+    
+    default:
+        break;
+    }
+    return res;
+}
 
 static diffErrorCode print_command_by_opcode(OpCodes code, FILE* stream)
 {

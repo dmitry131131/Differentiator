@@ -252,12 +252,14 @@ TreeSegment* getE(tokenArray* token_array, diffErrorCode* error)
             val = CreateNode(OP_CODE_SEGMENT_DATA, data, val, val2);
             val2->parent      = val;
             val->left->parent = val;
+            val->weight = 3;
             break;
         case MINUS:
             data.Op_code = MINUS;
             val = CreateNode(OP_CODE_SEGMENT_DATA, data, val, val2);
             val2->parent      = val;
             val->left->parent = val;
+            val->weight = 3;
             break;
         
         default:
@@ -298,12 +300,14 @@ TreeSegment* getT(tokenArray* token_array, diffErrorCode* error)
             val = CreateNode(OP_CODE_SEGMENT_DATA, data, val, val2);
             val2->parent      = val;
             val->left->parent = val;
+            val->weight = 2;
             break;
         case DIV:
             data.Op_code = DIV;
             val = CreateNode(OP_CODE_SEGMENT_DATA, data, val, val2);
             val2->parent      = val;
             val->left->parent = val;
+            val->weight = 2;
             break;
         
         default:
@@ -339,6 +343,7 @@ TreeSegment* getPow(tokenArray* token_array, diffErrorCode* error)
         val = CreateNode(OP_CODE_SEGMENT_DATA, data, val, val2);
         val2->parent      = val;
         val->left->parent = val;
+        val->weight = 1;
     }
 
     return val;
@@ -381,6 +386,7 @@ TreeSegment* getN(tokenArray* token_array, diffErrorCode* error)
         SegmentData data;
         data.D_number = (token_array->Array)[token_array->Pointer].data.num;
         val = CreateNode(DOUBLE_SEGMENT_DATA, data, nullptr, nullptr);
+        val->weight = 0;
         (token_array->Pointer)++;
     }
     else
@@ -400,12 +406,14 @@ TreeSegment* getId(tokenArray* token_array, diffErrorCode* error)
         SegmentData data;
         data.Var = 1;
         val = CreateNode(VAR_SEGMENT_DATA, data, nullptr, nullptr);
+        val->weight = 0;
     }
     else if ((token_array->Array)[token_array->Pointer].type == OP && (token_array->Array)[token_array->Pointer].data.op)
     {
         SegmentData data;
         data.Op_code = (token_array->Array)[token_array->Pointer].data.op;
         val = CreateNode(OP_CODE_SEGMENT_DATA, data, nullptr, nullptr);
+        val->weight = 0;
         (token_array->Pointer)++;
 
         if ((token_array->Array)[token_array->Pointer].data.op != OBR)
