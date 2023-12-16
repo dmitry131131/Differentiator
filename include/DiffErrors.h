@@ -12,7 +12,8 @@ enum diffErrorCode {
     WRONG_DIFF_SYNTAX,
     DTOR_BUFFER_ERROR,
     BAD_TREE_SEGMENT,
-    BAD_TREE_COMPOSITION
+    BAD_TREE_COMPOSITION,
+    COPY_SUBTREE_ERROR
 };
 
 void print_diff_error(diffErrorCode error);

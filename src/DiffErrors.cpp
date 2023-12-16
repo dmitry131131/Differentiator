@@ -28,6 +28,7 @@ void print_diff_error_message(diffErrorCode error, FILE* stream)
             CHECK_CODE(DTOR_BUFFER_ERROR,       "Buffer dtor error!\n")
             CHECK_CODE(BAD_TREE_SEGMENT,        "Bad tree segment(bad type of value)!\n")
             CHECK_CODE(BAD_TREE_COMPOSITION,    "Bad tree composition(can't solve)!\n")
+            CHECK_CODE(COPY_SUBTREE_ERROR,      "Error in copying subtree!\n")
 
     default:
         fprintf(stream, "Unknown error!\n");
