@@ -17,6 +17,7 @@
         "variant": "cpp",
         "__hash_table": "cpp",
         "__tree": "cpp",
-        "limits": "cpp"
+        "limits": "cpp",
+        "__locale": "cpp"
     }
 }

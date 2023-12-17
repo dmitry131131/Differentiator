@@ -139,6 +139,20 @@ diffErrorCode take_derivative(TreeData* input, TreeData* output)
     (ptr)->weight = weight_;                                            \
 }while(0)
 
+#define COPY_SEG(S, D) do{                                              \
+    if (copy_subtree((S), (D)))                                         \
+    {                                                                   \
+        return COPY_SUBTREE_ERROR;                                      \
+    }                                                                   \
+}while(0)
+
+#define TAKE_DIR(S, D) do{                                              \
+    if ((error = take_derivative_recursive((S), (D))))                  \
+    {                                                                   \
+        return error;                                                   \
+    }                                                                   \
+}while(0)
+
 static diffErrorCode take_derivative_recursive(const TreeSegment* src, TreeSegment** dest)
 {
     assert(src);
@@ -181,49 +195,86 @@ static diffErrorCode take_derivative_by_opcode(const TreeSegment* src, TreeSegme
     {
     case PLUS:
         CREATE_OP_CODE_SEG(*dest, PLUS, 3);
-        if ((error = take_derivative_recursive(src->left, &((*dest)->left))))
-        {
-            return error;
-        }
-        if ((error = take_derivative_recursive(src->right, &((*dest)->right))))
-        {
-            return error;
-        }
+
+        TAKE_DIR(src->left, &((*dest)->left));
+        TAKE_DIR(src->right, &((*dest)->right));
+
         break;
     case MINUS:
         CREATE_OP_CODE_SEG(*dest, MINUS, 3);
-        if ((error = take_derivative_recursive(src->left, &((*dest)->left))))
-        {
-            return error;
-        }
-        if ((error = take_derivative_recursive(src->right, &((*dest)->right))))
-        {
-            return error;
-        }
+
+        TAKE_DIR(src->left, &((*dest)->left));
+        TAKE_DIR(src->right, &((*dest)->right));
+
         break;
     case MUL:
         CREATE_OP_CODE_SEG(*dest, PLUS, 3);
+
         CREATE_OP_CODE_SEG((*dest)->left, MUL, 2);
-        if ((error = take_derivative_recursive(src->left, &(((*dest)->left)->left))))
-        {
-            return error;
-        }
-        if (copy_subtree(src->right, &(((*dest)->left)->right)))
-        {
-            return COPY_SUBTREE_ERROR;
-        }
+        TAKE_DIR(src->left, &(((*dest)->left)->left));
+        COPY_SEG(src->right, &(((*dest)->left)->right));
 
         CREATE_OP_CODE_SEG((*dest)->right, MUL, 2);
-        if ((error = take_derivative_recursive(src->right, &(((*dest)->right)->right))))
-        {
-            return error;
-        }
-        if (copy_subtree(src->left, &(((*dest)->right)->left)))
-        {
-            return COPY_SUBTREE_ERROR;
-        }
+        TAKE_DIR(src->right, &(((*dest)->right)->right));
+        COPY_SEG(src->left, &(((*dest)->right)->left));
 
         break;
+    case DIV:
+        CREATE_OP_CODE_SEG(*dest, DIV, 2);
+
+        CREATE_OP_CODE_SEG((*dest)->left, MINUS, 3);
+
+        CREATE_OP_CODE_SEG(((*dest)->left)->left, MUL, 2);
+        TAKE_DIR(src->left, &((((*dest)->left)->left)->left));
+        COPY_SEG(src->right, &((((*dest)->left)->left)->right));
+
+        CREATE_OP_CODE_SEG(((*dest)->left)->right, MUL, 2);
+        TAKE_DIR(src->right, &((((*dest)->left)->right)->right));
+        COPY_SEG(src->left, &((((*dest)->left)->right)->left));
+
+        CREATE_OP_CODE_SEG((*dest)->right, POW, 1);
+        COPY_SEG(src->right, &(((*dest)->right)->left));
+        CREATE_DOUBLE_SEG(((*dest)->right)->right, 2);
+
+        break;
+    case SIN:
+        CREATE_OP_CODE_SEG(*dest, MUL, 2);
+
+        CREATE_OP_CODE_SEG((*dest)->left, COS, 0);
+        COPY_SEG(src->left, &(((*dest)->left)->left));
+
+        TAKE_DIR(src->left, &((*dest)->right));
+
+        break;
+    case COS:
+        CREATE_OP_CODE_SEG(*dest, MUL, 2);
+
+        CREATE_OP_CODE_SEG((*dest)->left, MUL, 2);
+        CREATE_OP_CODE_SEG(((*dest)->left)->left, SIN, 0);
+        COPY_SEG(src->left, &((((*dest)->left)->left)->left));
+        CREATE_DOUBLE_SEG(((*dest)->left)->right, -1);
+
+        TAKE_DIR(src->left, &((*dest)->right));
+
+        break;
+    case TAN:
+        CREATE_OP_CODE_SEG(*dest, DIV, 2);
+
+        CREATE_DOUBLE_SEG((*dest)->left, 1);
+
+        CREATE_OP_CODE_SEG((*dest)->right, POW, 1);
+        CREATE_OP_CODE_SEG(((*dest)->right)->left, COS, 0);
+        COPY_SEG(src->left, &((((*dest)->right)->left)->left));
+        CREATE_DOUBLE_SEG(((*dest)->right)->right, 2);
+
+        break;
+    case POW:
+    
+        break;
+    
+    case OBR:
+    case CBR:
+    case NONE:
     default:
         break;
     }
@@ -231,5 +282,7 @@ static diffErrorCode take_derivative_by_opcode(const TreeSegment* src, TreeSegme
     return error;
 }
 
+#undef TAKE_DIR
+#undef COPY_SEG
 #undef CREATE_OP_CODE_SEG
 #undef CREATE_DOUBLE_SEG
