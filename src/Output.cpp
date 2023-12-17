@@ -124,6 +124,7 @@ static bool is_single_command(OpCodes code)
     case SIN:
     case COS:
     case TAN:
+    case LN:
         res = true;
         break;
 
@@ -168,6 +169,9 @@ static diffErrorCode print_command_by_opcode(OpCodes code, FILE* stream)
         break;
     case POW:
         fprintf(stream, "^");
+        break;
+    case LN:
+        fprintf(stream, "ln");
         break;
 
     case OBR:

@@ -102,6 +102,13 @@ static double solve_op_segment(const TreeSegment* segment, const double left, co
     case POW:
         return pow(left, right);
 
+    case LN:
+        if (left <= 0)
+        {
+            return NAN;
+        }
+        return log(left);
+
     case NONE:
     case OBR:
     case CBR:
@@ -196,80 +203,106 @@ static diffErrorCode take_derivative_by_opcode(const TreeSegment* src, TreeSegme
     case PLUS:
         CREATE_OP_CODE_SEG(*dest, PLUS, 3);
 
-        TAKE_DIR(src->left, &((*dest)->left));
-        TAKE_DIR(src->right, &((*dest)->right));
+            TAKE_DIR(src->left, &((*dest)->left));
+            TAKE_DIR(src->right, &((*dest)->right));
 
         break;
     case MINUS:
         CREATE_OP_CODE_SEG(*dest, MINUS, 3);
 
-        TAKE_DIR(src->left, &((*dest)->left));
-        TAKE_DIR(src->right, &((*dest)->right));
+            TAKE_DIR(src->left, &((*dest)->left));
+            TAKE_DIR(src->right, &((*dest)->right));
 
         break;
     case MUL:
         CREATE_OP_CODE_SEG(*dest, PLUS, 3);
 
-        CREATE_OP_CODE_SEG((*dest)->left, MUL, 2);
-        TAKE_DIR(src->left, &(((*dest)->left)->left));
-        COPY_SEG(src->right, &(((*dest)->left)->right));
+            CREATE_OP_CODE_SEG((*dest)->left, MUL, 2);
+                TAKE_DIR(src->left, &(((*dest)->left)->left));
+                COPY_SEG(src->right, &(((*dest)->left)->right));
 
-        CREATE_OP_CODE_SEG((*dest)->right, MUL, 2);
-        TAKE_DIR(src->right, &(((*dest)->right)->right));
-        COPY_SEG(src->left, &(((*dest)->right)->left));
+            CREATE_OP_CODE_SEG((*dest)->right, MUL, 2);
+                TAKE_DIR(src->right, &(((*dest)->right)->right));
+                COPY_SEG(src->left, &(((*dest)->right)->left));
 
         break;
     case DIV:
         CREATE_OP_CODE_SEG(*dest, DIV, 2);
 
-        CREATE_OP_CODE_SEG((*dest)->left, MINUS, 3);
+            CREATE_OP_CODE_SEG((*dest)->left, MINUS, 3);
 
-        CREATE_OP_CODE_SEG(((*dest)->left)->left, MUL, 2);
-        TAKE_DIR(src->left, &((((*dest)->left)->left)->left));
-        COPY_SEG(src->right, &((((*dest)->left)->left)->right));
+                CREATE_OP_CODE_SEG(((*dest)->left)->left, MUL, 2);
+                    TAKE_DIR(src->left, &((((*dest)->left)->left)->left));
+                    COPY_SEG(src->right, &((((*dest)->left)->left)->right));
 
-        CREATE_OP_CODE_SEG(((*dest)->left)->right, MUL, 2);
-        TAKE_DIR(src->right, &((((*dest)->left)->right)->right));
-        COPY_SEG(src->left, &((((*dest)->left)->right)->left));
+                CREATE_OP_CODE_SEG(((*dest)->left)->right, MUL, 2);
+                    TAKE_DIR(src->right, &((((*dest)->left)->right)->right));
+                    COPY_SEG(src->left, &((((*dest)->left)->right)->left));
 
-        CREATE_OP_CODE_SEG((*dest)->right, POW, 1);
-        COPY_SEG(src->right, &(((*dest)->right)->left));
-        CREATE_DOUBLE_SEG(((*dest)->right)->right, 2);
+            CREATE_OP_CODE_SEG((*dest)->right, POW, 1);
+                COPY_SEG(src->right, &(((*dest)->right)->left));
+                CREATE_DOUBLE_SEG(((*dest)->right)->right, 2);
 
         break;
     case SIN:
         CREATE_OP_CODE_SEG(*dest, MUL, 2);
 
-        CREATE_OP_CODE_SEG((*dest)->left, COS, 0);
-        COPY_SEG(src->left, &(((*dest)->left)->left));
+            CREATE_OP_CODE_SEG((*dest)->left, COS, 0);
+                COPY_SEG(src->left, &(((*dest)->left)->left));
 
-        TAKE_DIR(src->left, &((*dest)->right));
+            TAKE_DIR(src->left, &((*dest)->right));
 
         break;
     case COS:
         CREATE_OP_CODE_SEG(*dest, MUL, 2);
 
-        CREATE_OP_CODE_SEG((*dest)->left, MUL, 2);
-        CREATE_OP_CODE_SEG(((*dest)->left)->left, SIN, 0);
-        COPY_SEG(src->left, &((((*dest)->left)->left)->left));
-        CREATE_DOUBLE_SEG(((*dest)->left)->right, -1);
+            CREATE_OP_CODE_SEG((*dest)->left, MUL, 2);
+                CREATE_OP_CODE_SEG(((*dest)->left)->left, SIN, 0);
+                    COPY_SEG(src->left, &((((*dest)->left)->left)->left));
+                CREATE_DOUBLE_SEG(((*dest)->left)->right, -1);
 
-        TAKE_DIR(src->left, &((*dest)->right));
+            TAKE_DIR(src->left, &((*dest)->right));
 
         break;
     case TAN:
         CREATE_OP_CODE_SEG(*dest, DIV, 2);
 
-        CREATE_DOUBLE_SEG((*dest)->left, 1);
+            CREATE_DOUBLE_SEG((*dest)->left, 1);
 
-        CREATE_OP_CODE_SEG((*dest)->right, POW, 1);
-        CREATE_OP_CODE_SEG(((*dest)->right)->left, COS, 0);
-        COPY_SEG(src->left, &((((*dest)->right)->left)->left));
-        CREATE_DOUBLE_SEG(((*dest)->right)->right, 2);
+            CREATE_OP_CODE_SEG((*dest)->right, POW, 1);
+                CREATE_OP_CODE_SEG(((*dest)->right)->left, COS, 0);
+                    COPY_SEG(src->left, &((((*dest)->right)->left)->left));
+                CREATE_DOUBLE_SEG(((*dest)->right)->right, 2);
 
         break;
-    case POW:
-    
+    case LN:
+        CREATE_OP_CODE_SEG(*dest, DIV, 2);
+
+            TAKE_DIR(src->left, &((*dest)->left));
+            COPY_SEG(src->left, &((*dest)->right));
+
+        break;
+    case POW:  //FIXME how to simplify tree
+        CREATE_OP_CODE_SEG(*dest, MUL, 2);
+
+            COPY_SEG(src, &((*dest)->left));
+
+            CREATE_OP_CODE_SEG((*dest)->right, PLUS, 3);
+                CREATE_OP_CODE_SEG(((*dest)->right)->left, MUL, 2);
+
+                    CREATE_OP_CODE_SEG((((*dest)->right)->left)->left, DIV, 2);
+                        TAKE_DIR(src->left, &(((((*dest)->right)->left)->left)->left));
+                        COPY_SEG(src->left, &(((((*dest)->right)->left)->left)->right));
+
+                    COPY_SEG(src->right, &((((*dest)->right)->left)->right));
+
+                CREATE_OP_CODE_SEG(((*dest)->right)->right, MUL, 2);
+
+                    CREATE_OP_CODE_SEG((((*dest)->right)->right)->left, LN, 0);
+                        COPY_SEG(src->left, &(((((*dest)->right)->right)->left)->left));
+
+                    TAKE_DIR(src->right, &(((((*dest)->right)->right)->left)->right));
+
         break;
     
     case OBR:

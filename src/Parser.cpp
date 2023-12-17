@@ -187,6 +187,11 @@ diffErrorCode read_text_command(outputBuffer* buffer, DiffToken* token)
         token->type    = OP;
         token->data.op = TAN;
     }
+    else if (!strcmp(cmd, "ln"))
+    {
+        token->type    = OP;
+        token->data.op = LN;
+    }
     else if (!strcmp(cmd, "x"))
     {
         token->type     = VAR;
