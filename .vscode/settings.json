@@ -18,6 +18,7 @@
         "__hash_table": "cpp",
         "__tree": "cpp",
         "limits": "cpp",
-        "__locale": "cpp"
+        "__locale": "cpp",
+        "memory_resource": "cpp"
     }
 }

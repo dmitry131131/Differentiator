@@ -13,6 +13,8 @@
 
 double solve_tree(const TreeData* tree, diffErrorCode* error);
 
+double solve_tree_recursive(const TreeSegment* segment, diffErrorCode* error);
+
 diffErrorCode take_derivative(TreeData* input, TreeData* output);
 
 #endif

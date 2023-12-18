@@ -7,8 +7,6 @@
 
 #include "Diff.h"
 
-static double solve_tree_recursive(const TreeSegment* segment, diffErrorCode* error);
-
 static double solve_op_segment(const TreeSegment* segment, const double left, const double right);
 
 static diffErrorCode take_derivative_by_opcode(const TreeSegment* src, TreeSegment** dest);
@@ -21,7 +19,7 @@ double solve_tree(const TreeData* tree, diffErrorCode* error)
     return solve_tree_recursive(tree->root, error);
 }
 
-static double solve_tree_recursive(const TreeSegment* segment, diffErrorCode* error)
+double solve_tree_recursive(const TreeSegment* segment, diffErrorCode* error)
 {
     assert(segment);
 
@@ -42,11 +40,15 @@ static double solve_tree_recursive(const TreeSegment* segment, diffErrorCode* er
         }
 
         l_val = solve_tree_recursive(segment->left,  error);
+
+        if (isnan(l_val)) return NAN;
         
         if (segment->right)
         {
             r_val = solve_tree_recursive(segment->right, error);
         }
+
+        if (isnan(r_val)) return NAN;
         
         answer = solve_op_segment(segment, l_val, r_val);
 
@@ -60,6 +62,7 @@ static double solve_tree_recursive(const TreeSegment* segment, diffErrorCode* er
         break;
 
     case VAR_SEGMENT_DATA:
+        if (error) *error = NO_DIFF_ERRORS;
         return NAN;             // при этом никикий ошибки нет, просто внутри дерева переменная и её нельзя вычислить
         break;
 

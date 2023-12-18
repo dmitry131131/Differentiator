@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "Diff.h"
+#include "Simplify.h"
 
 int main()
 {   
@@ -27,6 +28,11 @@ int main()
     TreeData tree2 = {};
 
     take_derivative(&tree, &tree2);
+
+    if ((error = simplify_tree(&tree2)))
+    {
+        print_diff_error(error);
+    }
 
     tree_dump(&tree2);
 
