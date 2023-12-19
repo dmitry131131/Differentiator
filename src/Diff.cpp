@@ -9,9 +9,9 @@
 
 static double solve_op_segment(const TreeSegment* segment, const double left, const double right);
 
-static diffErrorCode take_derivative_by_opcode(const TreeSegment* src, TreeSegment** dest);
+static diffErrorCode take_derivative_by_opcode(const TreeSegment* src, TreeSegment** dest, FILE* stream);
 
-static diffErrorCode take_derivative_recursive(const TreeSegment* src, TreeSegment** dest);
+static diffErrorCode take_derivative_recursive(const TreeSegment* src, TreeSegment** dest, FILE* stream);
 
 double solve_tree(const TreeData* tree, diffErrorCode* error)
 {
@@ -127,14 +127,24 @@ diffErrorCode take_derivative(TreeData* input, TreeData* output)
     assert(output);
     diffErrorCode error = NO_DIFF_ERRORS;
 
-    if ((error = take_derivative_recursive(input->root, &(output->root))))
+    FILE* file = fopen("ref.txt", "w");
+    if (!file)
+    {
+        return REFERENCE_FILE_CREATING_ERROR;
+    }
+
+    write_latex_header(file);
+
+    if ((error = take_derivative_recursive(input->root, &(output->root), file)))
     {
         return error;
     }
 
+    write_latex_footer(file);
+
     return error;
 }
-
+//FIXME Проблема с parent кроется в этих макросах - нужно срочно решить
 #define CREATE_DOUBLE_SEG(ptr, val) do{                                 \
     SegmentData data = {};                                              \
     data.D_number = val;                                                \
@@ -157,16 +167,17 @@ diffErrorCode take_derivative(TreeData* input, TreeData* output)
 }while(0)
 
 #define TAKE_DIR(S, D) do{                                              \
-    if ((error = take_derivative_recursive((S), (D))))                  \
+    if ((error = take_derivative_recursive((S), (D), stream)))          \
     {                                                                   \
         return error;                                                   \
     }                                                                   \
 }while(0)
 
-static diffErrorCode take_derivative_recursive(const TreeSegment* src, TreeSegment** dest)
+static diffErrorCode take_derivative_recursive(const TreeSegment* src, TreeSegment** dest, FILE* stream)
 {
     assert(src);
     assert(dest);
+    assert(stream);
     diffErrorCode error = NO_DIFF_ERRORS;
 
     switch (src->type)
@@ -180,7 +191,7 @@ static diffErrorCode take_derivative_recursive(const TreeSegment* src, TreeSegme
         break;
 
     case OP_CODE_SEGMENT_DATA:
-        if ((error = take_derivative_by_opcode(src, dest)))
+        if ((error = take_derivative_by_opcode(src, dest, stream)))
         {
             return error;
         }
@@ -192,14 +203,21 @@ static diffErrorCode take_derivative_recursive(const TreeSegment* src, TreeSegme
         break;
     }
 
+    fprintf(stream, "\\[(");
+    print_expression_to_latex_recursive(src, stream);
+    fprintf(stream, ")' = ");
+    print_expression_to_latex_recursive((*dest), stream);
+    fprintf(stream, "\\]\n");
+
     return error;
 }
 
-static diffErrorCode take_derivative_by_opcode(const TreeSegment* src, TreeSegment** dest)
+static diffErrorCode take_derivative_by_opcode(const TreeSegment* src, TreeSegment** dest, FILE* stream)
 {
     assert(src);
     assert(dest);
     diffErrorCode error = NO_DIFF_ERRORS;
+    double is_computable = NAN;
 
     switch (src->data.Op_code)
     {
@@ -286,6 +304,36 @@ static diffErrorCode take_derivative_by_opcode(const TreeSegment* src, TreeSegme
 
         break;
     case POW:  //FIXME how to simplify tree
+        is_computable = solve_tree_recursive(src->right, &error);
+        if (error) return error;
+        if (!isnan(is_computable))
+        {
+            CREATE_OP_CODE_SEG(*dest, MUL, 2);
+                COPY_SEG(src->right, &((*dest)->left));
+
+                CREATE_OP_CODE_SEG((*dest)->right, MUL, 2);
+                    CREATE_OP_CODE_SEG(((*dest)->right)->left, POW, 1);
+                        COPY_SEG(src->left, &((*dest)->right->left->left));
+                        CREATE_OP_CODE_SEG((*dest)->right->left->right, MINUS, 3);
+                            COPY_SEG(src->right, &((*dest)->right->left->right->left));
+                            CREATE_DOUBLE_SEG((*dest)->right->left->right->right, 1);
+                    TAKE_DIR(src->left, &(((*dest)->right)->right));
+
+            break;
+        }
+        is_computable = solve_tree_recursive(src->left, &error);
+        if (!isnan(is_computable))
+        {
+            CREATE_OP_CODE_SEG(*dest, MUL, 2);
+                CREATE_OP_CODE_SEG((*dest)->left, LN, 0);
+                COPY_SEG(src->left, &((*dest)->left->left));
+
+                CREATE_OP_CODE_SEG((*dest)->right, MUL, 2);
+                    COPY_SEG(src, &(((*dest)->right)->left));
+                    TAKE_DIR(src->right, &(((*dest)->right)->right));
+
+            break;
+        }
         CREATE_OP_CODE_SEG(*dest, MUL, 2);
 
             COPY_SEG(src, &((*dest)->left));
@@ -304,7 +352,7 @@ static diffErrorCode take_derivative_by_opcode(const TreeSegment* src, TreeSegme
                     CREATE_OP_CODE_SEG((((*dest)->right)->right)->left, LN, 0);
                         COPY_SEG(src->left, &(((((*dest)->right)->right)->left)->left));
 
-                    TAKE_DIR(src->right, &(((((*dest)->right)->right)->left)->right));
+                    TAKE_DIR(src->right, &((((*dest)->right)->right)->right));
 
         break;
     

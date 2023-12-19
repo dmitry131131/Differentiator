@@ -33,7 +33,7 @@ int main()
     {
         print_diff_error(error);
     }
-
+    print_expression_to_latex(&tree, stdout);
     tree_dump(&tree2);
 
     tree_dtor(&tree2);

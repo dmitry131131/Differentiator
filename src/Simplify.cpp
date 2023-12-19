@@ -186,6 +186,7 @@ static bool pow_simplify(TreeSegment** segment, diffErrorCode* error)
         CHANGE_SUBTREE_TO_DOUBLE(segment, 0);
         return true;
     }
+    //TODO pow simplify
 
     return false;
 }

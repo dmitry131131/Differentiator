@@ -22,13 +22,14 @@ void print_diff_error_message(diffErrorCode error, FILE* stream)
         case NO_DIFF_ERRORS:
             break;
 
-            CHECK_CODE(DIFF_FILE_OPEN_ERROR,    "Can't open input file!\n")
-            CHECK_CODE(READ_FROM_FILE_ERROR,    "Error in reading file!\n")
-            CHECK_CODE(WRONG_DIFF_SYNTAX,       "Wrong syntax!\n")
-            CHECK_CODE(DTOR_BUFFER_ERROR,       "Buffer dtor error!\n")
-            CHECK_CODE(BAD_TREE_SEGMENT,        "Bad tree segment(bad type of value)!\n")
-            CHECK_CODE(BAD_TREE_COMPOSITION,    "Bad tree composition(can't solve)!\n")
-            CHECK_CODE(COPY_SUBTREE_ERROR,      "Error in copying subtree!\n")
+            CHECK_CODE(DIFF_FILE_OPEN_ERROR,            "Can't open input file!\n")
+            CHECK_CODE(READ_FROM_FILE_ERROR,            "Error in reading file!\n")
+            CHECK_CODE(WRONG_DIFF_SYNTAX,               "Wrong syntax!\n")
+            CHECK_CODE(DTOR_BUFFER_ERROR,               "Buffer dtor error!\n")
+            CHECK_CODE(BAD_TREE_SEGMENT,                "Bad tree segment(bad type of value)!\n")
+            CHECK_CODE(BAD_TREE_COMPOSITION,            "Bad tree composition(can't solve)!\n")
+            CHECK_CODE(COPY_SUBTREE_ERROR,              "Error in copying subtree!\n")
+            CHECK_CODE(REFERENCE_FILE_CREATING_ERROR,   "Error in creating reference file!\n")
 
     default:
         fprintf(stream, "Unknown error!\n");

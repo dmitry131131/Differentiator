@@ -13,7 +13,8 @@ enum diffErrorCode {
     DTOR_BUFFER_ERROR,
     BAD_TREE_SEGMENT,
     BAD_TREE_COMPOSITION,
-    COPY_SUBTREE_ERROR
+    COPY_SUBTREE_ERROR,
+    REFERENCE_FILE_CREATING_ERROR
 };
 
 void print_diff_error(diffErrorCode error);
