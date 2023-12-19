@@ -27,7 +27,7 @@ double solve_tree_recursive(const TreeSegment* segment, diffErrorCode* error)
     double l_val  = NAN;
     double r_val  = NAN;
     double answer = NAN;
-    switch (segment->type)
+    switch ((int) segment->type)
     {
     case DOUBLE_SEGMENT_DATA:
         return segment->data.D_number;
@@ -197,7 +197,7 @@ static diffErrorCode take_derivative_recursive(const TreeSegment* src, TreeSegme
     assert(stream);
     diffErrorCode error = NO_DIFF_ERRORS;
 
-    switch (src->type)
+    switch ((int) src->type)
     {
     case DOUBLE_SEGMENT_DATA:
         CREATE_DOUBLE_SEG(*dest, par, 0);

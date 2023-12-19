@@ -79,7 +79,7 @@ static diffErrorCode print_expression_recursive(TreeSegment* segment, FILE* stre
 
     BRACKET("(");
 
-    switch (segment->type)
+    switch ((int) segment->type)
     {
     case DOUBLE_SEGMENT_DATA:
         fprintf(stream, "%.2lf", segment->data.D_number);
@@ -149,7 +149,7 @@ diffErrorCode print_expression_to_latex_recursive(const TreeSegment* segment, FI
     diffErrorCode error = NO_DIFF_ERRORS;
     BRACKET("(");
 
-    switch (segment->type)
+    switch ((int) segment->type)
     {
     case DOUBLE_SEGMENT_DATA:
         fprintf(stream, "%.2lf", segment->data.D_number);
@@ -350,7 +350,7 @@ diffErrorCode write_latex_footer(FILE* stream)
 diffErrorCode random_phrase(FILE* stream)
 {
     assert(stream);
-    int phrase_index = rand() % 10;
+    size_t phrase_index = (size_t) (rand() % 10);
     if (phrase_index <= phrase_count)
     {
         fprintf(stream, "%s", phrase_array[phrase_index]);
