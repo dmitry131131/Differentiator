@@ -7,6 +7,6 @@
 
 const double epsilon = 0.00001;
 
-diffErrorCode simplify_tree(TreeData* tree);
+diffErrorCode simplify_tree(TreeData* tree, FILE* stream);
 
 #endif

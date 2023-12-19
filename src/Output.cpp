@@ -1,7 +1,22 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <assert.h>
 
 #include "Diff.h"
+
+const size_t phrase_count = 10;
+const char* phrase_array[] = {
+            "Очевидно что:\n",
+            "Из чего следует:\n",
+            "Легко показать, что:\n",
+            "По виду выражения понятно:\n",
+            "По методу Дедекинда:\n",
+            "Исходя из простейших математических правил:\n",
+            "По велению богов матанализа:\n",
+            "Легко увидеть, что:\n",
+            "Легко заметить, что:\n",
+            "Оценим следующее выражение:\n"
+};
 
 enum PrintCommandMode {
     CONSOLE,
@@ -329,5 +344,16 @@ diffErrorCode write_latex_footer(FILE* stream)
 
     fprintf(stream, "\\end{document}\n");
 
+    return NO_DIFF_ERRORS;
+}
+
+diffErrorCode random_phrase(FILE* stream)
+{
+    assert(stream);
+    int phrase_index = rand() % 10;
+    if (phrase_index <= phrase_count)
+    {
+        fprintf(stream, "%s", phrase_array[phrase_index]);
+    }
     return NO_DIFF_ERRORS;
 }

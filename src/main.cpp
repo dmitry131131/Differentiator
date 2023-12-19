@@ -28,13 +28,11 @@ int main()
     TreeData tree2 = {};
 
     take_derivative(&tree, &tree2);
-
-    if ((error = simplify_tree(&tree2)))
-    {
-        print_diff_error(error);
-    }
+    
     print_expression_to_latex(&tree, stdout);
     tree_dump(&tree2);
+
+    print_expression(&tree2, stdout);
 
     tree_dtor(&tree2);
     tree_dtor(&tree);

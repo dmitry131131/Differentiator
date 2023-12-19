@@ -15,4 +15,6 @@ diffErrorCode write_latex_header(FILE* stream);
 
 diffErrorCode write_latex_footer(FILE* stream);
 
+diffErrorCode random_phrase(FILE* stream);
+
 #endif

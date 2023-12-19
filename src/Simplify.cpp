@@ -7,27 +7,40 @@
 
 static bool is_equal(const double first, const double second);
 
-static bool simplify_tree_recursive(TreeSegment** segment, diffErrorCode* error);
+static bool simplify_tree_recursive(TreeSegment** segment, FILE* stream, diffErrorCode* error);
 
-static bool solve_simplify(TreeSegment** segment, diffErrorCode* error);
+static bool solve_simplify(TreeSegment** segment, FILE* stream, diffErrorCode* error);
 
-static bool mul_div_simplify(TreeSegment** segment, diffErrorCode* error);
+static bool mul_div_simplify(TreeSegment** segment, FILE* stream, diffErrorCode* error);
 
-static bool plus_minus_simplify(TreeSegment** segment, diffErrorCode* error);
+static bool plus_minus_simplify(TreeSegment** segment, FILE* stream, diffErrorCode* error);
 
-static bool pow_simplify(TreeSegment** segment, diffErrorCode* error);
+static bool pow_simplify(TreeSegment** segment, FILE* stream, diffErrorCode* error);
 
-diffErrorCode simplify_tree(TreeData* tree)
+diffErrorCode simplify_tree(TreeData* tree, FILE* stream)
 {
     assert(tree);
     diffErrorCode error = NO_DIFF_ERRORS;
 
-    simplify_tree_recursive(&(tree->root), &error);
+    simplify_tree_recursive(&(tree->root), stream, &error);
 
     return error;
 }
 
+#define FIRST_DUMP_PART do{                                     \
+    random_phrase(stream);                                      \
+    fprintf(stream, "\\[(");                                    \
+    print_expression_to_latex_recursive(*segment, stream);      \
+    fprintf(stream, ") = ");                                    \
+}while(0)
+
+#define SECOND_DUMP_PART do{                                    \
+    print_expression_to_latex_recursive(*segment, stream);      \
+    fprintf(stream, "\\]\n");                                   \
+}while(0)
+
 #define CHANGE_SUBTREE_TO_DOUBLE(segment_, val_) do{                                    \
+    FIRST_DUMP_PART;                                                                    \
     SegmentData data = {};                                                              \
     data.D_number = val_;                                                               \
     TreeSegment* new_seg = CreateNode(DOUBLE_SEGMENT_DATA, data, nullptr, nullptr);     \
@@ -36,19 +49,23 @@ diffErrorCode simplify_tree(TreeData* tree)
                                                                                         \
     del_segment(*(segment_));                                                           \
     *segment_ = new_seg;                                                                \
+    SECOND_DUMP_PART;                                                                   \
 }while(0)
 
 #define CHANGE_SUBTREE_TO_SUBTREE(segment_, new_segment_) do{       \
+    FIRST_DUMP_PART;                                                \
     TreeSegment* new_seg = nullptr;                                 \
     copy_subtree(new_segment_, &new_seg);                           \
                                                                     \
     del_segment(*segment_);                                         \
     *segment_ = new_seg;                                            \
+    SECOND_DUMP_PART;                                               \
 }while(0)   
 
-static bool simplify_tree_recursive(TreeSegment** segment, diffErrorCode* error)
+static bool simplify_tree_recursive(TreeSegment** segment, FILE* stream, diffErrorCode* error)
 {
     assert(segment);
+    assert(stream);
 
     bool is_simplufy = true;
     while (is_simplufy)
@@ -57,26 +74,26 @@ static bool simplify_tree_recursive(TreeSegment** segment, diffErrorCode* error)
 
         if ((*segment)->left)
         {
-            is_simplufy = simplify_tree_recursive(&((*segment)->left), error);
+            is_simplufy = simplify_tree_recursive(&((*segment)->left), stream, error);
         }
         if ((*segment)->right)
         {
-            is_simplufy = simplify_tree_recursive(&((*segment)->right), error);
+            is_simplufy = simplify_tree_recursive(&((*segment)->right), stream, error);
         }
 
-        is_simplufy = solve_simplify(segment, error);
+        is_simplufy = solve_simplify(segment, stream, error);
         if (*error) return is_simplufy;
         if (is_simplufy) continue;
 
-        is_simplufy = mul_div_simplify(segment, error);
+        is_simplufy = mul_div_simplify(segment, stream, error);
         if (*error) return is_simplufy;
         if (is_simplufy) continue;
 
-        is_simplufy = plus_minus_simplify(segment, error);
+        is_simplufy = plus_minus_simplify(segment, stream, error);
         if (*error) return is_simplufy;
         if (is_simplufy) continue;
 
-        is_simplufy = pow_simplify(segment, error);
+        is_simplufy = pow_simplify(segment, stream, error);
         if (*error) return is_simplufy;
         if (is_simplufy) continue;
     }
@@ -84,7 +101,7 @@ static bool simplify_tree_recursive(TreeSegment** segment, diffErrorCode* error)
     return is_simplufy;
 }
 
-static bool solve_simplify(TreeSegment** segment, diffErrorCode* error)
+static bool solve_simplify(TreeSegment** segment, FILE* stream, diffErrorCode* error)
 {
     assert(segment);
 
@@ -100,9 +117,10 @@ static bool solve_simplify(TreeSegment** segment, diffErrorCode* error)
     return false;
 }
 
-static bool mul_div_simplify(TreeSegment** segment, diffErrorCode* error)
+static bool mul_div_simplify(TreeSegment** segment, FILE* stream, diffErrorCode* error)
 {
     assert(segment);
+
     if (!((*segment)->type == OP_CODE_SEGMENT_DATA && ((*segment)->data.Op_code == MUL || (*segment)->data.Op_code == DIV)))
     {
         return false;
@@ -136,7 +154,7 @@ static bool mul_div_simplify(TreeSegment** segment, diffErrorCode* error)
     return false;
 }
 
-static bool plus_minus_simplify(TreeSegment** segment, diffErrorCode* error)
+static bool plus_minus_simplify(TreeSegment** segment, FILE* stream, diffErrorCode* error)
 {
     assert(segment);
 
@@ -162,7 +180,7 @@ static bool plus_minus_simplify(TreeSegment** segment, diffErrorCode* error)
     return false;
 }
 
-static bool pow_simplify(TreeSegment** segment, diffErrorCode* error)
+static bool pow_simplify(TreeSegment** segment, FILE* stream, diffErrorCode* error)
 {
     assert(segment);
 
@@ -191,6 +209,8 @@ static bool pow_simplify(TreeSegment** segment, diffErrorCode* error)
     return false;
 }
 
+#undef FIRST_DUMP_PART
+#undef SECOND_DUMP_PART
 #undef CHANGE_SUBTREE_TO_SUBTREE
 #undef CHANGE_SUBTREE_TO_DOUBLE
 
