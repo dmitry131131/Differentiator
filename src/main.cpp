@@ -19,20 +19,19 @@ int main()
         RETURN(0);
     }
 
-    // tree_dump(&tree);
-
     printf("Answer: %lf\n", solve_tree(&tree, &error));
 
+    printf("Input function: ");
     print_expression(&tree, stdout);
 
     TreeData tree2 = {};
 
     take_derivative(&tree, &tree2);
-    
-    print_expression_to_latex(&tree, stdout);
-    tree_dump(&tree2);
 
+    printf("Output function: ");
     print_expression(&tree2, stdout);
+
+    tree_dump(&tree2);
 
     tree_dtor(&tree2);
     tree_dtor(&tree);

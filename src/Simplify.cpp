@@ -6,16 +6,11 @@
 #include "Simplify.h"
 
 static bool is_equal(const double first, const double second);
-
 static bool simplify_tree_recursive(TreeSegment** segment, FILE* stream, diffErrorCode* error);
-
 static bool solve_simplify(TreeSegment** segment, FILE* stream, diffErrorCode* error);
-
-static bool mul_div_simplify(TreeSegment** segment, FILE* stream, diffErrorCode* error);
-
-static bool plus_minus_simplify(TreeSegment** segment, FILE* stream, diffErrorCode* error);
-
-static bool pow_simplify(TreeSegment** segment, FILE* stream, diffErrorCode* error);
+static bool mul_div_simplify(TreeSegment** segment, FILE* stream);
+static bool plus_minus_simplify(TreeSegment** segment, FILE* stream);
+static bool pow_simplify(TreeSegment** segment, FILE* stream);
 
 diffErrorCode simplify_tree(TreeData* tree, FILE* stream)
 {
@@ -85,15 +80,15 @@ static bool simplify_tree_recursive(TreeSegment** segment, FILE* stream, diffErr
         if (*error) return is_simplufy;
         if (is_simplufy) continue;
 
-        is_simplufy = mul_div_simplify(segment, stream, error);
+        is_simplufy = mul_div_simplify(segment, stream);
         if (*error) return is_simplufy;
         if (is_simplufy) continue;
 
-        is_simplufy = plus_minus_simplify(segment, stream, error);
+        is_simplufy = plus_minus_simplify(segment, stream);
         if (*error) return is_simplufy;
         if (is_simplufy) continue;
 
-        is_simplufy = pow_simplify(segment, stream, error);
+        is_simplufy = pow_simplify(segment, stream);
         if (*error) return is_simplufy;
         if (is_simplufy) continue;
     }
@@ -117,7 +112,7 @@ static bool solve_simplify(TreeSegment** segment, FILE* stream, diffErrorCode* e
     return false;
 }
 
-static bool mul_div_simplify(TreeSegment** segment, FILE* stream, diffErrorCode* error)
+static bool mul_div_simplify(TreeSegment** segment, FILE* stream)
 {
     assert(segment);
 
@@ -154,7 +149,7 @@ static bool mul_div_simplify(TreeSegment** segment, FILE* stream, diffErrorCode*
     return false;
 }
 
-static bool plus_minus_simplify(TreeSegment** segment, FILE* stream, diffErrorCode* error)
+static bool plus_minus_simplify(TreeSegment** segment, FILE* stream)
 {
     assert(segment);
 
@@ -180,7 +175,7 @@ static bool plus_minus_simplify(TreeSegment** segment, FILE* stream, diffErrorCo
     return false;
 }
 
-static bool pow_simplify(TreeSegment** segment, FILE* stream, diffErrorCode* error)
+static bool pow_simplify(TreeSegment** segment, FILE* stream)
 {
     assert(segment);
 
