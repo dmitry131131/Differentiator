@@ -9,6 +9,22 @@
 #include "Tree.h"
 #include "Parser.h"
 
+// Tokenizer functions
+static diffErrorCode read_text_command(outputBuffer* buffer, DiffToken* token);
+static diffErrorCode read_punct_command(outputBuffer* buffer, DiffToken* token);
+static diffErrorCode diff_tokenizer(tokenArray* token_array, outputBuffer* buffer);
+// Recursive descent functions
+static TreeSegment*  getId(tokenArray* token_array, diffErrorCode* error);
+static TreeSegment*  getPow(tokenArray* token_array, diffErrorCode* error);
+static TreeSegment*  getN(tokenArray* token_array, diffErrorCode* error);
+static TreeSegment*  getP(tokenArray* token_array, diffErrorCode* error);
+static TreeSegment*  getT(tokenArray* token_array, diffErrorCode* error);
+static TreeSegment*  getE(tokenArray* token_array, diffErrorCode* error);
+static diffErrorCode getG(TreeData* tree, tokenArray* token_array);
+
+//------------------------------------------------------------------------------------//
+
+// General function
 diffErrorCode read_diff_from_file(const char* filename, TreeData* tree)
 {
     assert(filename);
@@ -59,7 +75,11 @@ diffErrorCode read_diff_from_file(const char* filename, TreeData* tree)
     #undef RETURN
 }
 
-diffErrorCode diff_tokenizer(tokenArray* token_array, outputBuffer* buffer)
+//#################################################################################################//
+//-----------------------------------> Tokenizer functions <---------------------------------------//
+//#################################################################################################//
+
+static diffErrorCode diff_tokenizer(tokenArray* token_array, outputBuffer* buffer)
 {
     assert(token_array);
     assert(buffer);
@@ -107,7 +127,7 @@ diffErrorCode diff_tokenizer(tokenArray* token_array, outputBuffer* buffer)
     return NO_DIFF_ERRORS;
 }
 
-diffErrorCode read_punct_command(outputBuffer* buffer, DiffToken* token)
+static diffErrorCode read_punct_command(outputBuffer* buffer, DiffToken* token)
 {
     assert(buffer);
     assert(token);
@@ -154,7 +174,7 @@ diffErrorCode read_punct_command(outputBuffer* buffer, DiffToken* token)
     return NO_DIFF_ERRORS;
 }
 
-diffErrorCode read_text_command(outputBuffer* buffer, DiffToken* token)
+static diffErrorCode read_text_command(outputBuffer* buffer, DiffToken* token)
 {
     assert(buffer);
     assert(token);
@@ -205,18 +225,11 @@ diffErrorCode read_text_command(outputBuffer* buffer, DiffToken* token)
     return NO_DIFF_ERRORS;
 }
 
-TreeSegment* CreateNode(SegmemtType type, SegmentData data, TreeSegment* left, TreeSegment* right)
-{
-    TreeSegment* seg = new_segment(type, sizeof(int));
+//#################################################################################################//
+//--------------------------------> Recursive descent functions <----------------------------------//
+//#################################################################################################//
 
-    seg->data  = data;
-    seg->left  = left;
-    seg->right = right;
-
-    return seg;
-}
-
-diffErrorCode getG(TreeData* tree, tokenArray* token_array)
+static diffErrorCode getG(TreeData* tree, tokenArray* token_array)
 {
     assert(tree);
     assert(token_array);
@@ -228,7 +241,7 @@ diffErrorCode getG(TreeData* tree, tokenArray* token_array)
     return error;
 }
 
-TreeSegment* getE(tokenArray* token_array, diffErrorCode* error)
+static TreeSegment* getE(tokenArray* token_array, diffErrorCode* error)
 {
     assert(token_array);
     assert(error);
@@ -279,7 +292,7 @@ TreeSegment* getE(tokenArray* token_array, diffErrorCode* error)
     return val;
 }
 
-TreeSegment* getT(tokenArray* token_array, diffErrorCode* error)
+static TreeSegment* getT(tokenArray* token_array, diffErrorCode* error)
 {
     TreeSegment* val = getPow(token_array, error);
     if (*error) return val;
@@ -326,7 +339,7 @@ TreeSegment* getT(tokenArray* token_array, diffErrorCode* error)
     return val;
 }
 
-TreeSegment* getPow(tokenArray* token_array, diffErrorCode* error)
+static TreeSegment* getPow(tokenArray* token_array, diffErrorCode* error)
 {
     TreeSegment* val = getP(token_array, error);
     if (*error) return val;
@@ -354,7 +367,7 @@ TreeSegment* getPow(tokenArray* token_array, diffErrorCode* error)
     return val;
 }
 
-TreeSegment* getP(tokenArray* token_array, diffErrorCode* error)
+static TreeSegment* getP(tokenArray* token_array, diffErrorCode* error)
 {
     TreeSegment* val = NULL;
     if ((token_array->Array)[token_array->Pointer].type == OP && (token_array->Array)[token_array->Pointer].data.op == OBR)
@@ -382,7 +395,7 @@ TreeSegment* getP(tokenArray* token_array, diffErrorCode* error)
     }
 }
 
-TreeSegment* getN(tokenArray* token_array, diffErrorCode* error)
+static TreeSegment* getN(tokenArray* token_array, diffErrorCode* error)
 {
     TreeSegment* val = NULL;
 
@@ -402,7 +415,7 @@ TreeSegment* getN(tokenArray* token_array, diffErrorCode* error)
     return val;
 }
 
-TreeSegment* getId(tokenArray* token_array, diffErrorCode* error)
+static TreeSegment* getId(tokenArray* token_array, diffErrorCode* error)
 {
     TreeSegment* val = NULL;
 
@@ -443,4 +456,19 @@ TreeSegment* getId(tokenArray* token_array, diffErrorCode* error)
     (token_array->Pointer)++;
 
     return val;
+}
+
+//#################################################################################################//
+//------------------------------------> Shared functions <-----------------------------------------//
+//#################################################################################################//
+
+TreeSegment* CreateNode(SegmemtType type, SegmentData data, TreeSegment* left, TreeSegment* right)
+{
+    TreeSegment* seg = new_segment(type, sizeof(int));
+
+    seg->data  = data;
+    seg->left  = left;
+    seg->right = right;
+
+    return seg;
 }

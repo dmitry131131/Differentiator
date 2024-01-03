@@ -9,10 +9,14 @@
 #include "Simplify.h"
 
 static double solve_op_segment(const TreeSegment* segment, const double left, const double right);
-
 static diffErrorCode take_derivative_by_opcode(const TreeSegment* src, TreeSegment** dest, TreeSegment* par, FILE* stream);
-
 static diffErrorCode take_derivative_recursive(const TreeSegment* src, TreeSegment** dest, TreeSegment* par, FILE* stream);
+
+//-------------------------------------------------------------------------------------------------//
+
+//#################################################################################################//
+//----------------------------------> Solve tree functions <---------------------------------------//
+//#################################################################################################//
 
 double solve_tree(const TreeData* tree, diffErrorCode* error)
 {
@@ -121,6 +125,10 @@ static double solve_op_segment(const TreeSegment* segment, const double left, co
         break;
     }
 }
+
+//#################################################################################################//
+//--------------------------------> Dirivative tree functions <------------------------------------//
+//#################################################################################################//
 
 diffErrorCode take_derivative(TreeData* input, TreeData* output)
 {

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#include "DataBuffer.h"
 #include "Diff.h"
 
 const size_t phrase_count = 10;
@@ -24,10 +25,24 @@ enum PrintCommandMode {
 };
 
 static diffErrorCode print_expression_recursive(TreeSegment* segment, FILE* stream);
-
 static diffErrorCode print_command_by_opcode(OpCodes code, FILE* stream, PrintCommandMode mode);
-
 static bool is_single_command(OpCodes code);
+
+//-------------------------------------------------------------------------------------------------//
+
+#define BRACKET(brack) do {                             \
+    if (segment->parent)                                \
+    {                                                   \
+        if (segment->parent->weight < segment->weight)  \
+        {                                               \
+            fprintf(stream, brack);                     \
+        }                                               \
+    }                                                   \
+}while(0)
+
+//#################################################################################################//
+//--------------------------------> Default output functions <-------------------------------------//
+//#################################################################################################//
 
 diffErrorCode print_expression(TreeData* tree, FILE* stream)
 {
@@ -42,33 +57,6 @@ diffErrorCode print_expression(TreeData* tree, FILE* stream)
 
     return error;
 }
-
-diffErrorCode print_expression_to_latex(TreeData* tree, FILE* stream)
-{
-    assert(tree);
-    assert(stream);
-    diffErrorCode error = NO_DIFF_ERRORS;
-
-    write_latex_header(stream);
-    fprintf(stream, "\\[\n");
-
-    error = print_expression_to_latex_recursive(tree->root, stream);
-
-    fprintf(stream, "\n\\]\n");
-    write_latex_footer(stream);
-
-    return error;
-}
-
-#define BRACKET(brack) do {                             \
-    if (segment->parent)                                \
-    {                                                   \
-        if (segment->parent->weight < segment->weight)  \
-        {                                               \
-            fprintf(stream, brack);                     \
-        }                                               \
-    }                                                   \
-}while(0)
 
 static diffErrorCode print_expression_recursive(TreeSegment* segment, FILE* stream)
 {
@@ -137,6 +125,27 @@ static diffErrorCode print_expression_recursive(TreeSegment* segment, FILE* stre
     }
 
     BRACKET(")");
+
+    return error;
+}
+
+//#################################################################################################//
+//---------------------------------> Latex output functions <--------------------------------------//
+//#################################################################################################//
+
+diffErrorCode print_expression_to_latex(TreeData* tree, FILE* stream)
+{
+    assert(tree);
+    assert(stream);
+    diffErrorCode error = NO_DIFF_ERRORS;
+
+    write_latex_header(stream);
+    fprintf(stream, "\\[\n");
+
+    error = print_expression_to_latex_recursive(tree->root, stream);
+
+    fprintf(stream, "\n\\]\n");
+    write_latex_footer(stream);
 
     return error;
 }
@@ -236,6 +245,48 @@ diffErrorCode print_expression_to_latex_recursive(const TreeSegment* segment, FI
 
 #undef BRACKET
 
+diffErrorCode write_latex_header(FILE* stream)
+{
+    assert(stream);
+
+    fprintf(stream,     "\\documentclass{article}\n"
+                        "\\usepackage{graphicx} %% Required for inserting images\n"
+                        "\\usepackage[T2A]{fontenc}\n"
+                        "\\usepackage{amsfonts}\n"
+                        "\\usepackage{mathtools}\n"
+                        "\\title{Отчёт}\n"
+                        "\\date{September 2023}\n"
+                        "\\begin{document}\n"
+                        "\\maketitle\n"
+                        "\\section{Introduction}\n");
+
+    return NO_DIFF_ERRORS;
+}
+
+diffErrorCode write_latex_footer(FILE* stream)
+{
+    assert(stream);
+
+    fprintf(stream, "\\end{document}\n");
+
+    return NO_DIFF_ERRORS;
+}
+
+//#################################################################################################//
+//------------------------------------> Shared functions <-----------------------------------------//
+//#################################################################################################//
+
+diffErrorCode random_phrase(FILE* stream)
+{
+    assert(stream);
+    size_t phrase_index = (size_t) (rand() % 10);
+    if (phrase_index <= phrase_count)
+    {
+        fprintf(stream, "%s", phrase_array[phrase_index]);
+    }
+    return NO_DIFF_ERRORS;
+}
+
 static bool is_single_command(OpCodes code)
 {
     bool res = false;
@@ -317,43 +368,5 @@ static diffErrorCode print_command_by_opcode(OpCodes code, FILE* stream, PrintCo
         break;
     }
 
-    return NO_DIFF_ERRORS;
-}
-
-diffErrorCode write_latex_header(FILE* stream)
-{
-    assert(stream);
-
-    fprintf(stream,     "\\documentclass{article}\n"
-                        "\\usepackage{graphicx} %% Required for inserting images\n"
-                        "\\usepackage[T2A]{fontenc}\n"
-                        "\\usepackage{amsfonts}\n"
-                        "\\usepackage{mathtools}\n"
-                        "\\title{Отчёт}\n"
-                        "\\date{September 2023}\n"
-                        "\\begin{document}\n"
-                        "\\maketitle\n"
-                        "\\section{Introduction}\n");
-
-    return NO_DIFF_ERRORS;
-}
-
-diffErrorCode write_latex_footer(FILE* stream)
-{
-    assert(stream);
-
-    fprintf(stream, "\\end{document}\n");
-
-    return NO_DIFF_ERRORS;
-}
-
-diffErrorCode random_phrase(FILE* stream)
-{
-    assert(stream);
-    size_t phrase_index = (size_t) (rand() % 10);
-    if (phrase_index <= phrase_count)
-    {
-        fprintf(stream, "%s", phrase_array[phrase_index]);
-    }
     return NO_DIFF_ERRORS;
 }

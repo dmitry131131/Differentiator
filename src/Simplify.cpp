@@ -12,6 +12,7 @@ static bool mul_div_simplify(TreeSegment** segment, FILE* stream);
 static bool plus_minus_simplify(TreeSegment** segment, FILE* stream);
 static bool pow_simplify(TreeSegment** segment, FILE* stream);
 
+// General function
 diffErrorCode simplify_tree(TreeData* tree, FILE* stream)
 {
     assert(tree);
@@ -21,6 +22,10 @@ diffErrorCode simplify_tree(TreeData* tree, FILE* stream)
 
     return error;
 }
+
+//#################################################################################################//
+//----------------------------------------->  Macroses <-------------------------------------------//
+//#################################################################################################//
 
 #define FIRST_DUMP_PART do{                                     \
     random_phrase(stream);                                      \
@@ -56,6 +61,10 @@ diffErrorCode simplify_tree(TreeData* tree, FILE* stream)
     *segment_ = new_seg;                                            \
     SECOND_DUMP_PART;                                               \
 }while(0)   
+
+//#################################################################################################//
+//-----------------------------------> Simplify functions <----------------------------------------//
+//#################################################################################################//
 
 static bool simplify_tree_recursive(TreeSegment** segment, FILE* stream, diffErrorCode* error)
 {
@@ -208,6 +217,10 @@ static bool pow_simplify(TreeSegment** segment, FILE* stream)
 #undef SECOND_DUMP_PART
 #undef CHANGE_SUBTREE_TO_SUBTREE
 #undef CHANGE_SUBTREE_TO_DOUBLE
+
+//#################################################################################################//
+//-------------------------------------> Shared functions <----------------------------------------//
+//#################################################################################################//
 
 static bool is_equal(const double first, const double second)
 {
