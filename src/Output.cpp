@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#include "DataBuffer.h"
 #include "Diff.h"
+#include "config.h"
 
 const size_t phrase_count = 10;
 const char* phrase_array[] = {
@@ -28,6 +28,7 @@ static diffErrorCode print_expression_recursive(TreeSegment* segment, FILE* stre
 static diffErrorCode print_command_by_opcode(OpCodes code, FILE* stream, PrintCommandMode mode);
 static bool is_single_command(OpCodes code);
 static size_t get_subtree_depth(TreeSegment* segment);
+static bool is_more(const double first, const double second);
 
 //-------------------------------------------------------------------------------------------------//
 
@@ -71,7 +72,14 @@ static diffErrorCode print_expression_recursive(TreeSegment* segment, FILE* stre
     switch ((int) segment->type)
     {
     case DOUBLE_SEGMENT_DATA:
-        fprintf(stream, "%.2lf", segment->data.D_number);
+        if (is_more(0, segment->data.D_number))
+        {
+            fprintf(stream, "(%.2lf)", segment->data.D_number);
+        }
+        else
+        {
+            fprintf(stream, "%.2lf", segment->data.D_number);
+        }
         break;
 
     case VAR_SEGMENT_DATA:
@@ -163,7 +171,14 @@ diffErrorCode print_expression_to_latex_recursive(const TreeSegment* segment, FI
     switch ((int) segment->type)
     {
     case DOUBLE_SEGMENT_DATA:
-        fprintf(stream, "%.2lf", segment->data.D_number);
+        if (is_more(0, segment->data.D_number))
+        {
+            fprintf(stream, "(%.2lf)", segment->data.D_number);
+        }
+        else
+        {
+            fprintf(stream, "%.2lf", segment->data.D_number);
+        }
         break;
 
     case VAR_SEGMENT_DATA:
@@ -435,4 +450,9 @@ static size_t get_subtree_depth(TreeSegment* segment)
 
     max_depth = 1 + ((left_depth >= right_depth) ? left_depth : right_depth);
     return max_depth;
+}
+
+static bool is_more(const double first, const double second)
+{
+    return first - second >= epsilon;
 }

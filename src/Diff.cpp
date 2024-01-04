@@ -5,6 +5,7 @@
 #include <string.h>
 #include <assert.h>
 
+#include "config.h"
 #include "Diff.h"
 #include "Simplify.h"
 
@@ -136,13 +137,16 @@ diffErrorCode take_derivative(TreeData* input, TreeData* output)
     assert(output);
     diffErrorCode error = NO_DIFF_ERRORS;
 
-    FILE* file = fopen("ref.txt", "w");
+    FILE* file = nullptr;
+    #ifdef WRITE_LATEX_REFERENCE
+    file = fopen("ref.txt", "w");
     if (!file)
     {
         return REFERENCE_FILE_CREATING_ERROR;
     }
 
     write_latex_header(file);
+    #endif
 
     if ((error = take_derivative_recursive(input->root, &(output->root), nullptr, file)))
     {
@@ -154,6 +158,7 @@ diffErrorCode take_derivative(TreeData* input, TreeData* output)
         return error;
     }
 
+    #ifdef WRITE_LATEX_REFERENCE
     fprintf(file, "В итоге получаем: \n");
     fprintf(file, "\\begin{gather*}(");                                    
     print_expression_to_latex_recursive(input->root, file);      
@@ -162,6 +167,7 @@ diffErrorCode take_derivative(TreeData* input, TreeData* output)
     fprintf(file, "\\end{gather*}\n");
 
     write_latex_footer(file);
+    #endif
 
     return error;
 }
@@ -202,7 +208,7 @@ static diffErrorCode take_derivative_recursive(const TreeSegment* src, TreeSegme
 {
     assert(src);
     assert(dest);
-    assert(stream);
+
     diffErrorCode error = NO_DIFF_ERRORS;
 
     switch ((int) src->type)
@@ -228,12 +234,14 @@ static diffErrorCode take_derivative_recursive(const TreeSegment* src, TreeSegme
         break;
     }
 
+    #ifdef WRITE_LATEX_REFERENCE
     random_phrase(stream);
     fprintf(stream, "\\begin{gather*}(");
     print_expression_to_latex_recursive(src, stream);
     fprintf(stream, ")' = ");
     print_expression_to_latex_recursive((*dest), stream);
     fprintf(stream, "\\end{gather*}\n");
+    #endif
 
     return error;
 }
@@ -242,6 +250,7 @@ static diffErrorCode take_derivative_by_opcode(const TreeSegment* src, TreeSegme
 {
     assert(src);
     assert(dest);
+    
     diffErrorCode error = NO_DIFF_ERRORS;
     double is_computable = NAN;
 
