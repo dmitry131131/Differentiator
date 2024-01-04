@@ -32,14 +32,14 @@ static bool is_more(const double first, const double second);
 
 //-------------------------------------------------------------------------------------------------//
 
-#define BRACKET(brack) do {                             \
-    if (segment->parent)                                \
-    {                                                   \
-        if (segment->parent->weight < segment->weight)  \
-        {                                               \
-            fprintf(stream, brack);                     \
-        }                                               \
-    }                                                   \
+#define BRACKET(brack) do {                                                                                                     \
+    if (segment->parent)                                                                                                        \
+    {                                                                                                                           \
+        if (segment->parent->weight < segment->weight || (segment->parent->weight == segment->weight && segment->weight == 1))  \
+        {                                                                                                                       \
+            fprintf(stream, brack);                                                                                             \
+        }                                                                                                                       \
+    }                                                                                                                           \
 }while(0)
 
 //#################################################################################################//
