@@ -154,18 +154,18 @@ diffErrorCode take_derivative(TreeData* input, TreeData* output)
         return error;
     }
 
-    random_phrase(file);
-    fprintf(file, "\\[(");                                    
+    fprintf(file, "В итоге получаем: \n");
+    fprintf(file, "\\begin{gather*}(");                                    
     print_expression_to_latex_recursive(input->root, file);      
     fprintf(file, ")' = ");    
     print_expression_to_latex_recursive(output->root, file);
-    fprintf(file, "\\]\n");
+    fprintf(file, "\\end{gather*}\n");
 
     write_latex_footer(file);
 
     return error;
 }
-//FIXME Проблема с parent кроется в этих макросах - нужно срочно решить
+
 #define CREATE_DOUBLE_SEG(ptr, par, val) do{                            \
     SegmentData data = {};                                              \
     data.D_number = val;                                                \
@@ -229,11 +229,11 @@ static diffErrorCode take_derivative_recursive(const TreeSegment* src, TreeSegme
     }
 
     random_phrase(stream);
-    fprintf(stream, "\\[(");
+    fprintf(stream, "\\begin{gather*}(");
     print_expression_to_latex_recursive(src, stream);
     fprintf(stream, ")' = ");
     print_expression_to_latex_recursive((*dest), stream);
-    fprintf(stream, "\\]\n");
+    fprintf(stream, "\\end{gather*}\n");
 
     return error;
 }
@@ -329,7 +329,7 @@ static diffErrorCode take_derivative_by_opcode(const TreeSegment* src, TreeSegme
             COPY_SEG(src->left, &((*dest)->right), (*dest));
 
         break;
-    case POW:  //FIXME how to simplify tree
+    case POW: 
         is_computable = solve_tree_recursive(src->right, &error);
         if (error) return error;
         if (!isnan(is_computable))

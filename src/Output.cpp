@@ -24,9 +24,10 @@ enum PrintCommandMode {
     LATEX
 };
 
-static diffErrorCode print_expression_recursive(TreeSegment* segment, FILE* stream);
+static diffErrorCode print_expression_recursive(TreeSegment* segment, FILE* stream, size_t count = 0);
 static diffErrorCode print_command_by_opcode(OpCodes code, FILE* stream, PrintCommandMode mode);
 static bool is_single_command(OpCodes code);
+static size_t get_subtree_depth(TreeSegment* segment);
 
 //-------------------------------------------------------------------------------------------------//
 
@@ -58,13 +59,13 @@ diffErrorCode print_expression(TreeData* tree, FILE* stream)
     return error;
 }
 
-static diffErrorCode print_expression_recursive(TreeSegment* segment, FILE* stream)
+static diffErrorCode print_expression_recursive(TreeSegment* segment, FILE* stream, size_t count)
 {
     assert(segment);
     assert(stream);
 
     diffErrorCode error = NO_DIFF_ERRORS;
-
+    
     BRACKET("(");
 
     switch ((int) segment->type)
@@ -85,7 +86,7 @@ static diffErrorCode print_expression_recursive(TreeSegment* segment, FILE* stre
                 return error;
             }
             fprintf(stream, "(");
-            if ((error = print_expression_recursive(segment->left, stream)))
+            if ((error = print_expression_recursive(segment->left, stream, count)))
             {
                 return error;
             }
@@ -93,26 +94,24 @@ static diffErrorCode print_expression_recursive(TreeSegment* segment, FILE* stre
         }
         else
         {
-            if (segment->left)
+            if (!segment->left || !segment->right)
             {
-                if ((error = print_expression_recursive(segment->left, stream)))
-                {
-                    return error;
-                }
+                return BAD_TREE_SEGMENT;
             }
 
+            if ((error = print_expression_recursive(segment->left, stream, count)))
+            {
+                return error;
+            }
             if ((error = print_command_by_opcode(segment->data.Op_code, stream, CONSOLE)))
             {
                 return error;
             }
-
-            if (segment->right)
+            if ((error = print_expression_recursive(segment->right, stream, count)))
             {
-                if ((error = print_expression_recursive(segment->right, stream)))
-                {
-                    return error;
-                }
+                return error;
             }
+
         }
         break;
 
@@ -150,12 +149,15 @@ diffErrorCode print_expression_to_latex(TreeData* tree, FILE* stream)
     return error;
 }
 
-diffErrorCode print_expression_to_latex_recursive(const TreeSegment* segment, FILE* stream)
+diffErrorCode print_expression_to_latex_recursive(const TreeSegment* segment, FILE* stream, size_t count)
 {
     assert(segment);
     assert(stream);
 
     diffErrorCode error = NO_DIFF_ERRORS;
+    size_t first_rename  = 0;
+    size_t second_rename = 0;
+
     BRACKET("(");
 
     switch ((int) segment->type)
@@ -184,6 +186,11 @@ diffErrorCode print_expression_to_latex_recursive(const TreeSegment* segment, FI
         }
         else
         {
+            if (!segment->left || !segment->right)
+            {
+                return BAD_TREE_SEGMENT;
+            }
+
             if (segment->data.Op_code == DIV)
             {
                 if ((error = print_command_by_opcode(segment->data.Op_code, stream, LATEX)))
@@ -192,13 +199,22 @@ diffErrorCode print_expression_to_latex_recursive(const TreeSegment* segment, FI
                 }
                 fprintf(stream, "{");
             }
-            if (segment->left)
+
+            size_t depth = get_subtree_depth(segment->left);
+            if (depth > MAX_LINE_DEPTH)
             {
-                if ((error = print_expression_to_latex_recursive(segment->left, stream)))
+                count++;
+                fprintf(stream, "A_%lu", count);
+                first_rename = count;
+            }
+            else
+            {
+                if ((error = print_expression_to_latex_recursive(segment->left, stream, count)))
                 {
                     return error;
                 }
             }
+            
             if (segment->data.Op_code == DIV)
             {
                 fprintf(stream, "} ");
@@ -216,13 +232,22 @@ diffErrorCode print_expression_to_latex_recursive(const TreeSegment* segment, FI
             {
                 fprintf(stream, "{");
             }
-            if (segment->right)
+
+            depth = get_subtree_depth(segment->right);
+            if (depth > MAX_LINE_DEPTH)
             {
-                if ((error = print_expression_to_latex_recursive(segment->right, stream)))
+                count++;
+                fprintf(stream, "A_%lu", count);
+                second_rename = count;
+            }
+            else
+            {
+                if ((error = print_expression_to_latex_recursive(segment->right, stream, count)))
                 {
                     return error;
                 }
             }
+
             if (segment->data.Op_code == DIV || segment->data.Op_code == POW)
             {
                 fprintf(stream, "} ");
@@ -239,6 +264,23 @@ diffErrorCode print_expression_to_latex_recursive(const TreeSegment* segment, FI
     }
 
     BRACKET(")");
+
+    if (first_rename)
+    {
+        fprintf(stream, "\n\\\\ A_%lu = ", first_rename);
+        if ((error = print_expression_to_latex_recursive(segment->left, stream, count)))
+        {
+            return error;
+        }
+    }
+    if (second_rename)
+    {
+        fprintf(stream, "\n\\\\ A_%lu = ", second_rename);
+        if ((error = print_expression_to_latex_recursive(segment->right, stream, count)))
+        {
+            return error;
+        }
+    }
 
     return error;
 }
@@ -369,4 +411,28 @@ static diffErrorCode print_command_by_opcode(OpCodes code, FILE* stream, PrintCo
     }
 
     return NO_DIFF_ERRORS;
+}
+
+static size_t get_subtree_depth(TreeSegment* segment)
+{
+    assert(segment);
+
+    size_t max_depth = 0, left_depth = 0, right_depth = 0;
+
+    if (segment->left)
+    {
+        left_depth = get_subtree_depth(segment->left);
+    }
+    if (segment->right)
+    {
+        right_depth = get_subtree_depth(segment->right);
+    }
+
+    if (!segment->left && !segment->right)
+    {
+        return 1;
+    }
+
+    max_depth = 1 + ((left_depth >= right_depth) ? left_depth : right_depth);
+    return max_depth;
 }

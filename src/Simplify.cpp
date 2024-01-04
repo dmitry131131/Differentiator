@@ -29,14 +29,14 @@ diffErrorCode simplify_tree(TreeData* tree, FILE* stream)
 
 #define FIRST_DUMP_PART do{                                     \
     random_phrase(stream);                                      \
-    fprintf(stream, "\\[(");                                    \
+    fprintf(stream, "\\begin{gather*}(");                       \
     print_expression_to_latex_recursive(*segment, stream);      \
     fprintf(stream, ") = ");                                    \
 }while(0)
 
 #define SECOND_DUMP_PART do{                                    \
     print_expression_to_latex_recursive(*segment, stream);      \
-    fprintf(stream, "\\]\n");                                   \
+    fprintf(stream, "\\end{gather*}\n");                        \
 }while(0)
 
 #define CHANGE_SUBTREE_TO_DOUBLE(segment_, val_) do{                                    \
@@ -208,7 +208,6 @@ static bool pow_simplify(TreeSegment** segment, FILE* stream)
         CHANGE_SUBTREE_TO_DOUBLE(segment, 0);
         return true;
     }
-    //TODO pow simplify
 
     return false;
 }
